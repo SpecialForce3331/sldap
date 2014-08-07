@@ -50,8 +50,14 @@
             $src_ip = $line[0];
             $url = $line[1];
         }
+        elseif( $countLines == 3 )
+        {
+            $src_ip = $line[0];
+            $url = $line[1];
+            $login = $line[2];
+        }
 
-        $userData = getUserData($mysqli, $src_ip);
+        $userData = getUserData($mysqli, $src_ip, $login);
 
         if ( !empty( $userData ) && empty( $url ) )
         {
@@ -72,9 +78,19 @@
     }
 
 
-    function getUserData($mysqli, $ip)
+    function getUserData($mysqli, $ip, $login)
     {
-        $query = "SELECT login, patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.ip = INET_ATON('".$ip."')";
+        $query = "";
+
+        if ( is_null( $login ) )
+        {
+            $query = "SELECT login, patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.ip = INET_ATON('".$ip."')";
+        }
+        else
+        {
+            $query = "SELECT login, patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.login = '".$login."'";
+        }
+
 
         $result = $mysqli->query( $query ) or die( "select error" );
         $data = $result->fetch_row();
