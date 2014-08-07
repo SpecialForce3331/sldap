@@ -28,7 +28,7 @@
             visible_hostname squid
 
 
-            access_log /var/log/squid/access.log squid
+            access_log '.$SquidLogfile.' squid
 			';
     }
     else
@@ -39,8 +39,8 @@
             auth_param basic realm Squid proxy-caching web server
             auth_param basic credentialsttl 2 hours
 
-            acl uptk proxy_auth REQUIRED
-            external_acl_type accessCheck ttl=0 %LOGIN %URI /usr/bin/php -f '.$sldapDirectory.'/checkUser.php
+            acl users proxy_auth REQUIRED
+            external_acl_type accessCheck ttl=0 %LOGIN %URI php -f '.$sldapDirectory.'/checkUser.php
             acl allowUsers external accessCheck
 
             acl all src 0.0.0.0/0
@@ -52,7 +52,7 @@
 
             visible_hostname squid
 
-            access_log /var/log/squid/access.log squid
+            access_log '.$SquidLogfile.' squid
             ';
     }
 
