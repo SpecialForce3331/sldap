@@ -1,0 +1,92 @@
+-- phpMyAdmin SQL Dump
+-- version 4.0.5
+-- http://www.phpmyadmin.net
+--
+-- Хост: localhost
+-- Время создания: Авг 20 2013 г., 10:59
+-- Версия сервера: 5.6.13
+-- Версия PHP: 5.5.1
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+
+--
+-- База данных: `ldap_squid`
+--
+CREATE DATABASE IF NOT EXISTS `ldap_squid`;
+USE `ldap_squid`;
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `patterns`
+--
+
+CREATE TABLE IF NOT EXISTS `patterns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` text NOT NULL,
+  `traffic` int(11) NOT NULL DEFAULT '0',
+  `access` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `users`
+--
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `login` text CHARACTER SET utf8 NOT NULL,
+  `name` text CHARACTER SET utf8 NOT NULL,
+  `ip`INT UNSIGNED,
+  `trafficForDay` float NOT NULL DEFAULT '0',
+  `pattern_id` int(11) NOT NULL,
+  FOREIGN KEY (pattern_id) REFERENCES patterns(id),
+  `lastUpdate` double NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `usersTraffic`
+--
+
+CREATE TABLE IF NOT EXISTS `usersTraffic` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `login` text NOT NULL,
+  `cite` text NOT NULL,
+  `bytes` int(11) NOT NULL,
+  `dateTime` double NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+--
+-- Структура таблицы `denySites`
+--
+CREATE TABLE IF NOT EXISTS `denySites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `url` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+--
+-- Дамп данных таблицы `patterns`
+--
+INSERT INTO `patterns` (`id`, `name`, `traffic`, `access`) VALUES
+  (1, 'default', 0, 0);
+
+GRANT USAGE ON *.* TO 'ldap_squid'@'localhost' IDENTIFIED BY PASSWORD '*AA1420F182E88B9E5F874F6FBE7459291E8F4601';
+GRANT ALL PRIVILEGES ON `ldap\_squid`.* TO 'ldap_squid'@'localhost' WITH GRANT OPTION;

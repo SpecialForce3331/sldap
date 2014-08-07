@@ -1,0 +1,32 @@
+ul {
+	margin-top: 5%;
+	float: left;
+	width: 20%;
+	height: 80%;
+}
+
+li {
+	margin-top: 5%;
+}
+
+li div {
+	cursor: pointer;
+}
+
+#main {
+	overflow-y:auto;
+	margin-right: 100px;
+	margin-top: 5%;
+	margin-left: 200px;
+}
+
+
+#main i {
+	color: blue;
+}
+
+#panel {
+	margin-left: 31%;
+}
+
+
