@@ -120,12 +120,12 @@ function doWithUsers(what) //работа с пользователями в Б�
 {
 	var checkedUsers = new Array();
 	
-	for ( var i = 0; i < $("input").length; i++ ) //выбираем отмеченных пользователей
+	for ( var i = 0; i < $("input[type='checkbox']").length; i++ ) //выбираем отмеченных пользователей
 		{
-			if ( $("input")[i].checked == true )
+			if ( $("input[type='checkbox']")[i].checked == true )
 				{
-					checkedUsers.push( $("input")[i].parentNode.parentNode.children[1].innerHTML);
-					checkedUsers.push( $("input")[i].parentNode.parentNode.children[2].innerHTML);
+					checkedUsers.push( $("input[type='checkbox']")[i].parentNode.parentNode.children[1].innerHTML);
+					checkedUsers.push( $("input[type='checkbox']")[i].parentNode.parentNode.children[2].innerHTML);
                     checkedUsers.push( $(".patterns").val().split(",")[0] );
 				}
 		}
