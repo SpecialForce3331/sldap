@@ -137,7 +137,7 @@
                     for ( $i = 0; $i < count( $data ); $i++ ) //перебираем список запрещенныых сайтов и сравниваем с обращением пользователя
                     {
                         $current = trim($data[$i][0]);
-
+			$current = parse_url($current, PHP_URL_HOST);
                         if( preg_match( "/$current/i", $url ) )
                         {
                             echo "ERR\n";
