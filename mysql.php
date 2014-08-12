@@ -169,7 +169,7 @@ include 'install/checkconf.php';
 		
 		for ( $i = 0; $i < count($changes); $i++ )
 		{
-			$query = "UPDATE users SET pattern_id=\"".$changes[$i][1]."\" WHERE login=\"".$changes[$i][0]."\"";
+			$query = "UPDATE users SET pattern_id=\"".$changes[$i][2]."\" WHERE login=\"".$changes[$i][0]."\"";
 			$mysqli->query( $query ) or die("cannot update users for changes ".$mysqli->error );
 		}	
 		echo json_encode( array( "result" => "ok" ));
