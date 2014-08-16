@@ -29,8 +29,10 @@
 					<script type="text/javascript" src="js/main.js"></script>
 					<script type="text/javascript" src="js/jquery-1.8.3.js"></script>
 					<script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+					<script type="text/javascript" src="bootstrap/datepicker/js/bootstrap-datepicker.js"></script>
 					<script type="text/javascript" src="DataTables-1.10.0/media/js/jquery.dataTables.js"></script>
 					<link rel="stylesheet" href="bootstrap/css/bootstrap.css" />
+					<link rel="stylesheet" href="bootstrap/datepicker/css/datepicker.css" />
 					<link rel="stylesheet" href="DataTables-1.10.0/media/css/jquery.dataTables.css" />
 					<link rel="stylesheet" href="css/main.css" />
 				</head>
@@ -49,6 +51,9 @@
 						</li>
 						<li>
 							<a href=#><div onclick="getPatterns()">Шаблоны</div></a>
+						</li>
+						<li>
+							<a href=#><div onclick="showStatistic()">Статистика</div></a>
 						</li>
 						<li>
 							<a href=#><div>Настройки</div></a>

@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS `usersTraffic` (
   `dateTime` double NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
 --
 -- Структура таблицы `denySites`
 --
@@ -85,8 +86,10 @@ CREATE TABLE IF NOT EXISTS `denySites` (
 --
 -- Дамп данных таблицы `patterns`
 --
-INSERT INTO `patterns` (`id`, `name`, `traffic`, `access`) VALUES
+INSERT IGNORE INTO `patterns` (`id`, `name`, `traffic`, `access`) VALUES
   (1, 'default', 0, 0);
 
 GRANT USAGE ON *.* TO 'ldap_squid'@'localhost' IDENTIFIED BY PASSWORD '*AA1420F182E88B9E5F874F6FBE7459291E8F4601';
 GRANT ALL PRIVILEGES ON `ldap\_squid`.* TO 'ldap_squid'@'localhost' WITH GRANT OPTION;
+
+ALTER TABLE `usersTraffic` CHANGE `cite` `site` TEXT;

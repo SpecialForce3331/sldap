@@ -573,23 +573,83 @@ function deleteDenySite()
 }
 
 function selectAll()
-	{
-		for ( var i = 0; i < $("input").length; i++ )
-			{
-				$("input")[i].checked = true;
-			}
-	}
+{
+    for ( var i = 0; i < $("input").length; i++ )
+    {
+        $("input")[i].checked = true;
+    }
+}
 
 function cleanSelectAll()
-	{
-		for ( var i = 0; i < $("input").length; i++ )
-			{
-				$("input")[i].checked = false;
-			}
-	}
+{
+    for ( var i = 0; i < $("input").length; i++ )
+        {
+            $("input")[i].checked = false;
+        }
+}
 
+//Передается jquery объект таблицы
 function applyStyleForTable(table) {
     table.dataTable( {
         "jQueryUI": true
     } );
+}
+
+function showStatistic()
+{
+    $("#main").empty();
+    $("#panel").empty();
+    $("#main").append("<div>Укажите дату и выберите тип статистики (по пользователям или сайтам).</div>" +
+        "<div>Если вы не укажите одну из дат, запрос статистики будет осуществлен за сегодняшний день.</div>" +
+        "<div>ВНИМАНИЕ! Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
+    $("#main").append("" +
+        "Дата с <input id='fromDate' /> по <input id='toDate' />" +
+        "<div onclick=\"getTop('login', 15, $('#fromDate').val(), $('#toDate').val() )\" style='cursor: pointer;'>Топ 15 пользователей</div>" +
+        "<div onclick=\"getTop('site', 15, $('#fromDate').val(), $('#toDate').val() )\" style='cursor: pointer;'>Топ 15 сайтов</div>"
+    );
+    $("#fromDate").datepicker({format:"dd.mm.yyyy"});
+    $("#toDate").datepicker({format:"dd.mm.yyyy"});
+}
+
+function getTop(type, count, fromDate, toDate)
+{
+    var header = "";
+    if ( type === "login" )
+    {
+        header = "Пользователи";
+    }
+    else if( type === "site" )
+    {
+        header = "Сайты"
+    }
+
+    $.post("mysql.php", { action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate }, function(data)
+    {
+        $("#main").empty();
+        $("#panel").empty();
+
+        $("#main").append("<table id='topStats'></table>")
+        $("#topStats").append("" +
+                "<thead>" +
+                "<tr>" +
+                "<td>Траффик в Мбайтах</td>" +
+                "<td>"+header+"</td>" +
+                "</tr>" +
+                "</thead><tbody>");
+
+        for( var i = 0; i < data["data"].length; i++ )
+        {
+            $("#topStats").append("" +
+                "<tr>" +
+                    "<td>" + (data["data"][i][0]/1048576).toFixed(2) + "</td>" +
+                    "<td>"+data["data"][i][1]+"</td>" +
+                "</tr>"
+            );
+        }
+
+        $("#topStats").append("</tbody>");
+
+        applyStyleForTable( $("#topStats") );
+
+    }, "json");
 }

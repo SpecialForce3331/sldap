@@ -242,6 +242,15 @@ include 'install/checkconf.php';
 		
 		echo json_encode( array("result" => "ok") );
     }
+    else if( $_POST["action"] == "getTop" )
+    {
+        $type = $_POST["type"];
+        $count = $_POST["count"];
+        $fromDate = $_POST["fromDate"];
+        $toDate = $_POST["toDate"];
+        $result = getTop( $mysqli, $type, $count, $fromDate, $toDate );
+        echo json_encode( array("result" => "ok", "data" => $result) );
+    }
 	else
 	{
 		$data = array("result" => "false" );
@@ -251,6 +260,22 @@ include 'install/checkconf.php';
     function getPatternDetailsByName($mysqli, $name)
     {
         $query = "SELECT name,traffic,access FROM patterns WHERE name= $name";
+
+        $result = $mysqli->query( $query ) or die( "select error" );
+        $patternsData = $result->fetch_all( MYSQLI_NUM );
+        return $patternsData;
+    }
+
+    function getTop($mysqli, $type, $count, $fromDate, $toDate)
+    {
+        if( !empty($fromDate) && !empty($toDate) )
+        {
+            $query = "SELECT COUNT(bytes) as bytes, $type FROM usersTraffic WHERE dateTime BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('$fromDate', '%d.%m.%Y')) and UNIX_TIMESTAMP(STR_TO_DATE('$toDate', '%d.%m.%Y')) GROUP BY $type ORDER by count(bytes) desc LIMIT 0,$count";
+        }
+        else
+        {
+            $query = "SELECT COUNT(bytes) as bytes, $type FROM usersTraffic WHERE dateTime=UNIX_TIMESTAMP(DATE(NOW())) GROUP BY $type ORDER by count(bytes) desc LIMIT 0,$count";
+        }
 
         $result = $mysqli->query( $query ) or die( "select error" );
         $patternsData = $result->fetch_all( MYSQLI_NUM );

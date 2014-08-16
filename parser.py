@@ -28,7 +28,7 @@ else:
 
 
 def add_to_db(user_login, user_url, user_bytes, user_dateTime):
-        query = "INSERT INTO usersTraffic ( login, cite, bytes, dateTime ) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO usersTraffic ( login, site, bytes, dateTime ) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (user_login, user_url, user_bytes, user_dateTime))
 
 
