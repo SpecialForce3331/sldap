@@ -23,7 +23,7 @@ cursor.execute(query)
 last_update = cursor.fetchone()[0]
 
 def add_to_db(login, url, bytes, dateTime):
-        query = "INSERT INTO usersTraffic ( login, cite, bytes, dateTime ) VALUES (%s, %s, %i, %d)"
+        query = "INSERT INTO usersTraffic ( login, cite, bytes, dateTime ) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (login, url, bytes, dateTime))
 
 
