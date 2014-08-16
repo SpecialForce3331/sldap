@@ -20,11 +20,16 @@ login_array = cursor.fetchall()
 
 query = "SELECT dateTime FROM usersTraffic ORDER BY id DESC LIMIT 1"
 cursor.execute(query)
-last_update = cursor.fetchone()[0]
+last_update = cursor.fetchone()
+if last_update is None:
+    last_update = 0.0
+else:
+    last_update = last_update[0]
 
-def add_to_db(login, url, bytes, dateTime):
+
+def add_to_db(user_login, user_url, user_bytes, user_dateTime):
         query = "INSERT INTO usersTraffic ( login, cite, bytes, dateTime ) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (login, url, bytes, dateTime))
+        cursor.execute(query, (user_login, user_url, user_bytes, user_dateTime))
 
 
 file = open(pathLog, 'r')
@@ -37,3 +42,37 @@ for line in file:
             if login[0] == parsed_row[7] and float(parsed_row[0]) > last_update:
                 add_to_db(parsed_row[7], parsed_row[6], parsed_row[4], parsed_row[0])
 file.close()
+
+query = "SELECT lastUpdate,trafficForDay,login FROM users WHERE login IN ("
+
+for login in login_array:
+    if login == login_array[-1]:
+        query = query + "\"" + login[0] + "\")"
+    else:
+        query = query + "\"" + login[0] + "\","
+
+cursor.execute(query)
+result = cursor.fetchall()
+
+for row in result:
+    last_update = row[0]
+    current_traffic = row[1]
+    login = row[2]
+    query = "SELECT SUM(bytes) FROM usersTraffic WHERE dateTime > %s AND login = %s"
+    cursor.execute(query, (last_update, login))
+    row = cursor.fetchone()
+
+    if row[0] is not None:
+        traffic = float(round(row[0]/1048576, 2)) + current_traffic
+
+        if traffic > 0:
+            query = "SELECT dateTime FROM usersTraffic WHERE login=%s ORDER BY id DESC LIMIT 1"
+            cursor.execute(query, (login,))
+            last_update = cursor.fetchone()[0]
+            print(login)
+            query = "UPDATE users SET trafficForDay=%s, lastUpdate=%s WHERE login=%s"
+            cursor.execute(query, (traffic, last_update, login))
+
+query = "UPDATE users SET trafficForDay=\"0\" WHERE CURTIME() >= \"23:58:00\""
+cursor.execute(query)
+conn.commit()
