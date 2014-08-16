@@ -16,11 +16,26 @@
         echo "<input type='submit'/>";
         echo "</form>";
     }
+    $message = "";
+    if ( $_GET["message"] == "user_not_exist" )
+    {
+        $message = "Пользователя с таким логином не существует, обратитесь к системному администратору";
+    }
+    elseif( $_GET["message"] == "traffic_limit" )
+    {
+        $message = "Вы превысили лимит по траффику";
+    }
+    elseif( $_GET["message"] == "deny_site" )
+    {
+        $message = "Доступ к данному сайту заблокирован администратором";
+    }
     echo "
     <html>
         <head>
             <meta charset='UTF-8'/>
         </head>
-        <body>".$_GET['message']."</body>
+        <body>
+            <div align='center'>".$message."</div>
+        </body>
     </html>";
 ?>

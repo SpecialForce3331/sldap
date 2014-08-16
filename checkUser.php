@@ -2,115 +2,111 @@
 
 //    include 'install/checkconf.php';
 
-    //Работа с БД
-//TODO Разобраться по какой причине в случае инклуда файла процесс php начинает жрать по 15-20% цпу
-     	$server = "localhost";
-     	$username = "ldap_squid";
-     	$password = "qwerty";
-     	$database = "ldap_squid";
+    //TODO Разобраться по какой причине в случае инклуда файла процесс php начинает жрать по 15-20% цпу
+    $server = "localhost";
+    $username = "ldap_squid";
+    $password = "qwerty";
+    $database = "ldap_squid";
 
 //    $server = $MysqlIp;
 //    $username = $MysqlLogin;
 //    $password = $MysqlPassword;
 //    $database = $MysqlDatabase;
 
-    $mysqli = new mysqli( $server, $username, $password, $database ); //Устанавливаем соединение в базой мускула
-
-    if ( $mysqli->connect_errno )
+    function getConnection($server, $username, $password, $database, $mysqli)
     {
-        echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error; //Не удалось установить соединение с базой мускула.
-    }
-    else
-    {
-        $mysqli->set_charset("utf8"); //Устанавливаем принудительно кодировку в UTF-8!
+        //Работа с БД
+        if ( !is_null($mysqli) && mysqli_ping( $mysqli ) )
+        {
+            return $mysqli;
+        }
+        else
+        {
+            $mysqli = new mysqli( $server, $username, $password, $database ); //Устанавливаем соединение в базой мускула
+
+            if ( $mysqli->connect_errno )
+            {
+                echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error; //Не удалось установить соединение с базой мускула.
+                return null;
+            }
+            else
+            {
+                $mysqli->set_charset("utf8"); //Устанавливаем принудительно кодировку в UTF-8!
+                return $mysqli;
+            }
+        }
     }
 
+    $mysqli = null; //Mysql Connection
 
     while(1) //загоняем в цикл в ожидании запросов от squid
     {
+        $mysqli = getConnection($server, $username, $password, $database, $mysqli);
+        if( is_null( $mysqli ) )
+        {
+            break;
+        }
+
         $line = trim( fgets( STDIN ) );
+
         $line = explode( " ", $line );
 
-        $src_ip = null;
         $url = null;
         $login = null;
-        $countLines = count( $line );
 
-        if ( $countLines < 1 )
+        if ( !isset( $line[0] ) || !isset( $line[1] ) )
+        {
+            echo "";
+            continue;
+        }
+
+        $url = $line[0];
+        $login = $line[1];
+
+        $userData = getUserData($mysqli, $login);
+        if ( empty( $userData ) )
         {
             echo "ERR\n";
             continue;
         }
-        elseif( $countLines == 1 )
-        {
-            $src_ip = $line[0];
-        }
-        elseif( $countLines == 2 )
-        {
-            $src_ip = $line[0];
-            $url = $line[1];
-        }
-        elseif( $countLines == 3 )
-        {
-            $src_ip = $line[0];
-            $url = $line[1];
-            $login = $line[2];
-        }
 
-        $userData = getUserData($mysqli, $src_ip, $login);
+        $result = checkAccess($mysqli, $userData, $login, $url);
 
-        if ( !empty( $userData ) && empty( $url ) )
+        if ( empty( $result ) )
         {
-            $login = $userData[0];
-            echo "OK user=".$login."\n";
-            continue;
-        }
-        elseif( !empty( $userData ) && !empty( $url ) )
-        {
-            checkAccess($mysqli, $userData, $url);
-            continue;
+            echo "ERR\n";
         }
         else
         {
-            echo "ERR message=auth\n";
-            continue;
+            echo $result;
         }
+        continue;
     }
 
 
-    function getUserData($mysqli, $ip, $login)
+    function getUserData($mysqli, $login)
     {
-        $query = "";
-
-        if ( is_null( $login ) )
-        {
-            $query = "SELECT login, patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.ip = INET_ATON('".$ip."')";
-        }
-        else
-        {
-            $query = "SELECT login, patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.login = '".$login."'";
-        }
-
+        $query = "SELECT patterns.traffic, patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id WHERE users.login = '".$login."'";
 
         $result = $mysqli->query( $query ) or die( "select error" );
         $data = $result->fetch_row();
-        if ( !empty($data[0]) )
+        if ( !empty($data ) )
         {
             return $data;
         }
-        return "";
+        return;
     }
 
-    function checkAccess($mysqli, $userData, $url)
+    function checkAccess($mysqli, $userData, $login, $url)
     {
-        $login = $userData[0];
-        $AllowedTraffic = $userData[1];
-        $access = $userData[2];
+        $login = $login;
+        $AllowedTraffic = $userData[0];
+        $access = $userData[1];
 
         //если разрешенный траффик = 0 - безлимит, и есть доступ к запрещенным сайтам
         if ( $AllowedTraffic == 0 && $access == 1 )
         {
-            echo "OK\n";
+            return "OK\n";
         }
         else
         {
@@ -121,8 +117,7 @@
 
             if ( $rows > 0 && $AllowedTraffic != 0 ) //если есть пользователь превысивший траффик и у него не безлимит
             {
-                echo "ERR\n";
-                return;
+                return "ERR message=traffic_limit\n";
             }
             else if ( $access == 0 ) //если есть запрет к списку запрещеннных сайтов
             {
@@ -137,34 +132,31 @@
                     for ( $i = 0; $i < count( $data ); $i++ ) //перебираем список запрещенныых сайтов и сравниваем с обращением пользователя
                     {
                         $current = trim($data[$i][0]);
-			$current = parse_url($current, PHP_URL_HOST);
+//			            $current = parse_url($current, PHP_URL_HOST);
                         if( preg_match( "/$current/i", $url ) )
                         {
-                            echo "ERR\n";
-                            return;
+                            return "ERR message=deny_site\n";
                         }
                         else if ( $i == ( count( $data ) -1 ) )
                         {
-                            echo "OK\n";
-                            return;
+                            return "OK\n";
                         }
                     }
+                    return "ERR\n";
                 }
                 else
                 {
-                    echo "OK\n";
-                    return;
+                    return "OK\n";
                 }
 
             }
             else //те у кого не кончился траффик и у них есть доступ к запрещенным сайтам
             {
-                echo "OK\n";
-                return;
+                return "OK\n";
             }
 
-            echo "ERR\n";//если пользователя в БД вообще нет, то запрещаем
-            return;
+            return "ERR message=user_not_exist\n";//если пользователя в БД вообще нет, то запрещаем
         }
+        return "ERR\n";
     }
 ?>
