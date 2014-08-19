@@ -270,11 +270,11 @@ include 'install/checkconf.php';
     {
         if( !empty($fromDate) && !empty($toDate) )
         {
-            $query = "SELECT COUNT(bytes) as bytes, $type FROM usersTraffic WHERE dateTime BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('$fromDate', '%d.%m.%Y')) and UNIX_TIMESTAMP(STR_TO_DATE('$toDate', '%d.%m.%Y')) GROUP BY $type ORDER by count(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE dateTime BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('$fromDate', '%d.%m.%Y')) and UNIX_TIMESTAMP(STR_TO_DATE('$toDate', '%d.%m.%Y')) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
         else
         {
-            $query = "SELECT COUNT(bytes) as bytes, $type FROM usersTraffic WHERE dateTime=UNIX_TIMESTAMP(DATE(NOW())) GROUP BY $type ORDER by count(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE dateTime=UNIX_TIMESTAMP(DATE(NOW())) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
 
         $result = $mysqli->query( $query ) or die( "select error" );

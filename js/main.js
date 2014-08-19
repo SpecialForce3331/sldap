@@ -601,12 +601,13 @@ function showStatistic()
     $("#panel").empty();
     $("#main").append("<div>Укажите дату и выберите тип статистики (по пользователям или сайтам).</div>" +
         "<div>Если вы не укажите одну из дат, запрос статистики будет осуществлен за сегодняшний день.</div>" +
-        "<div>ВНИМАНИЕ! Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
+        "<div><b>ВНИМАНИЕ!</b> Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
     $("#main").append("" +
         "Дата с <input id='fromDate' /> по <input id='toDate' />" +
-        "<div onclick=\"getTop('login', 15, $('#fromDate').val(), $('#toDate').val() )\" style='cursor: pointer;'>Топ 15 пользователей</div>" +
-        "<div onclick=\"getTop('site', 15, $('#fromDate').val(), $('#toDate').val() )\" style='cursor: pointer;'>Топ 15 сайтов</div>"
+        "<a href='#'><div onclick=\"getTop('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div></a>" +
+        "<a href='#'><div onclick=\"getTop('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div></a>"
     );
+
     $("#fromDate").datepicker({format:"dd.mm.yyyy"});
     $("#toDate").datepicker({format:"dd.mm.yyyy"});
 }
@@ -623,12 +624,16 @@ function getTop(type, count, fromDate, toDate)
         header = "Сайты"
     }
 
+    $("#main").empty();
+    $("#panel").empty();
+
+    $("#main").append("<div id='loading'>Подождите, идет загрузка...</div>");
+
+
     $.post("mysql.php", { action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate }, function(data)
     {
-        $("#main").empty();
-        $("#panel").empty();
-
-        $("#main").append("<table id='topStats'></table>")
+        $("#loading").hide();
+        $("#main").append("<table id='topStats'></table>");
         $("#topStats").append("" +
                 "<thead>" +
                 "<tr>" +
@@ -641,7 +646,7 @@ function getTop(type, count, fromDate, toDate)
         {
             $("#topStats").append("" +
                 "<tr>" +
-                    "<td>" + (data["data"][i][0]/1048576).toFixed(2) + "</td>" +
+                    "<td>" + (data["data"][i][0]/1048576).toFixed(3) + "</td>" +
                     "<td>"+data["data"][i][1]+"</td>" +
                 "</tr>"
             );
