@@ -274,7 +274,7 @@ include 'install/checkconf.php';
         }
         else
         {
-            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE dateTime=UNIX_TIMESTAMP(DATE(NOW())) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE DATE(FROM_UNIXTIME(dateTime))=DATE(NOW()) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
 
         $result = $mysqli->query( $query ) or die( "select error" );
