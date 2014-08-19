@@ -44,15 +44,17 @@ CREATE TABLE IF NOT EXISTS `patterns` (
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `login` text CHARACTER SET utf8 NOT NULL,
-  `name` text CHARACTER SET utf8 NOT NULL,
-  `ip`INT UNSIGNED,
+  `login` varchar(50) NOT NULL,
+  `name` text NOT NULL,
+  `ip` int(10) unsigned DEFAULT NULL,
   `trafficForDay` float NOT NULL DEFAULT '0',
   `pattern_id` int(11) NOT NULL,
-  FOREIGN KEY (pattern_id) REFERENCES patterns(id),
   `lastUpdate` double NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+  PRIMARY KEY (`id`),
+  KEY `pattern_id` (`pattern_id`),
+  KEY `login` (`login`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`pattern_id`) REFERENCES `patterns` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -60,14 +62,16 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Структура таблицы `usersTraffic`
 --
 
-CREATE TABLE IF NOT EXISTS `usersTraffic` (
+CREATE TABLE `usersTraffic` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `login` text NOT NULL,
-  `cite` text NOT NULL,
+  `login` varchar(50) NOT NULL,
+  `site` text,
   `bytes` int(11) NOT NULL,
   `dateTime` double NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+  PRIMARY KEY (`id`),
+  KEY `login` (`login`),
+  KEY `dateTime` (`dateTime`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 --
 -- Структура таблицы `denySites`
@@ -91,5 +95,3 @@ INSERT IGNORE INTO `patterns` (`id`, `name`, `traffic`, `access`) VALUES
 
 GRANT USAGE ON *.* TO 'ldap_squid'@'localhost' IDENTIFIED BY PASSWORD '*AA1420F182E88B9E5F874F6FBE7459291E8F4601';
 GRANT ALL PRIVILEGES ON `ldap\_squid`.* TO 'ldap_squid'@'localhost' WITH GRANT OPTION;
-
-ALTER TABLE `usersTraffic` CHANGE `cite` `site` TEXT;

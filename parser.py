@@ -6,7 +6,7 @@ server = "localhost"
 username = "ldap_squid"
 password = "qwerty"
 database = "ldap_squid"
-pathLog = "/var/log/squid/access.log";
+pathLog = "/var/log/squid3/access.log";
 
 try:
     conn = mysql.connector.connect(user=username, password=password, host=server, database=database)
@@ -75,6 +75,6 @@ for row in result:
             query = "UPDATE users SET trafficForDay=%s, lastUpdate=%s WHERE login=%s"
             cursor.execute(query, (traffic, last_update, login))
 
-query = "UPDATE users SET trafficForDay=\"0\" WHERE CURTIME() >= \"23:58:00\""
+query = "UPDATE users SET trafficForDay=\"0\" WHERE CURTIME() >= \"23:30:00\""
 cursor.execute(query)
 conn.commit()
