@@ -6,7 +6,7 @@ server = "localhost"
 username = "ldap_squid"
 password = "qwerty"
 database = "ldap_squid"
-pathLog = "/var/log/squid3/access.log";
+pathLog = "/var/log/squid/access.log";
 
 try:
     conn = mysql.connector.connect(user=username, password=password, host=server, database=database)
@@ -32,15 +32,17 @@ def add_to_db(user_login, user_url, user_bytes, user_dateTime):
         cursor.execute(query, (user_login, user_url, user_bytes, user_dateTime))
 
 
-file = open(pathLog, 'r')
+file = open(pathLog, 'r', encoding="utf-8", errors="ignore")
 
 for line in file:
-    parsed_row = line.split()
-
-    for login in login_array:
-        if len(parsed_row) >= 7:
-            if login[0] == parsed_row[7] and float(parsed_row[0]) > last_update:
-                add_to_db(parsed_row[7], parsed_row[6], parsed_row[4], parsed_row[0])
+    try:
+        parsed_row = line.split()
+        for login in login_array:
+            if len(parsed_row) >= 7:
+                if login[0] == parsed_row[7] and float(parsed_row[0]) > last_update:
+                    add_to_db(parsed_row[7], parsed_row[6], parsed_row[4], parsed_row[0])
+    except:
+        continue
 file.close()
 
 query = "SELECT lastUpdate,trafficForDay,login FROM users WHERE login IN ("
