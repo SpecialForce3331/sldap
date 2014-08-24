@@ -56,7 +56,7 @@
 							<a href=#><div onclick="showStatistic()">Статистика</div></a>
 						</li>
 						<li>
-							<a href=#><div>Настройки</div></a>
+							<a href=#><div onclick="showPreferences()">Настройки</div></a>
 						</li>
 					</ul>
 				

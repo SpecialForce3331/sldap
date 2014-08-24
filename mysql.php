@@ -25,7 +25,8 @@ include 'install/checkconf.php';
 	{
 		$mysqli->set_charset("utf8"); //Устанавливаем принудительно кодировку в UTF-8!
 	}
-	
+
+    header('Content-Type: application/json');
 //Начало секции обработки пользовательских запросов
 	
 	if ( $_POST["action"] == "getMysqlUsers" ) //получаем пользователей и инфу о них из БД
@@ -251,6 +252,38 @@ include 'install/checkconf.php';
         $result = getTop( $mysqli, $type, $count, $fromDate, $toDate );
         echo json_encode( array("result" => "ok", "data" => $result) );
     }
+    else if( $_POST["action"] == "showAdmins" )
+    {
+        $result = showAdmins($mysqli);
+        echo json_encode( array("result" => "ok", "data" => $result) );
+    }
+    else if( $_POST["action"] == "getPermissions" )
+    {
+        $result = getPermissions($mysqli);
+        echo json_encode( array("result" => "ok", "data" => $result) );
+    }
+    else if( $_POST["action"] == "createAdminAccount" )
+    {
+        $login = $_POST["login"];
+        $password = $_POST["password"];
+        $retype_password = $_POST["retype_password"];
+        $permission_id = $_POST["permission_id"];
+
+        if ( $password === $retype_password )
+        {
+            $result = createAdminAccount($mysqli, $login, $password, $permission_id);
+            echo json_encode( array("result" => "ok", "data" => $result) );
+        }
+        else if( $password != $retype_password )
+        {
+            echo json_encode( array("result" => "error", "data" => $result, "message" => "Введенные пароли не совпадают!") );
+        }
+        else if( empty($login) or empty($password) or empty($retype_password) or empty($permission_id) )
+        {
+            echo json_encode( array("result" => "error", "data" => $result, "message" => "Вы не заполнили одно из полей!") );
+        }
+
+    }
 	else
 	{
 		$data = array("result" => "false" );
@@ -280,5 +313,28 @@ include 'install/checkconf.php';
         $result = $mysqli->query( $query ) or die( "select error" );
         $patternsData = $result->fetch_all( MYSQLI_NUM );
         return $patternsData;
+    }
+
+    function showAdmins($mysqli)
+    {
+        $query = "SELECT admins.id, admins.login, permissions.name, permissions.id FROM admins LEFT JOIN permissions ON admins.permission_id = permissions.id";
+        $result = $mysqli->query( $query ) or die( $mysqli->error." select error" );
+        $admins = $result->fetch_all( MYSQLI_NUM );
+        return $admins;
+    }
+
+    function getPermissions($mysqli)
+    {
+        $query = "SELECT id, name FROM permissions";
+        $result = $mysqli->query( $query ) or die( $mysqli->error." select error" );
+        $permissions = $result->fetch_all( MYSQLI_NUM );
+        return $permissions;
+    }
+
+    function createAdminAccount($mysqli, $login, $password, $permission_id)
+    {
+        $statement = $mysqli->prepare("INSERT INTO admins (login, password, permission_id) VALUES (?, ?, ?)") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+        $statement->bind_param('ssi', $login, $password, $permission_id);
+        $statement->execute() or die( "не удалось выполнить добавление учетной записи администратора ".$statement->error );
     }
 ?>

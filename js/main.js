@@ -590,6 +590,7 @@ function cleanSelectAll()
 
 //Передается jquery объект таблицы
 function applyStyleForTable(table) {
+    console.log("apply style for table");
     table.dataTable( {
         "jQueryUI": true
     } );
@@ -642,12 +643,12 @@ function getTopList(type, count, fromDate, toDate)
                 "</tr>" +
                 "</thead><tbody>");
 
-        for( var i = 0; i < data["data"].length; i++ )
+        for( var i = 0; i < data.data.length; i++ )
         {
             $("#topStats").append("" +
                 "<tr>" +
-                    "<td>" + (data["data"][i][0]/1048576).toFixed(3) + "</td>" +
-                    "<td>"+data["data"][i][1]+"</td>" +
+                    "<td>" + (data.data[i][0]/1048576).toFixed(3) + "</td>" +
+                    "<td>"+data.data[i][1]+"</td>" +
                 "</tr>"
             );
         }
@@ -657,4 +658,146 @@ function getTopList(type, count, fromDate, toDate)
         applyStyleForTable( $("#topStats") );
 
     }, "json");
+}
+
+function showPreferences()
+{
+    $("#main").empty();
+    $("#panel").empty();
+
+    $("#main").append("<div onclick='showAdmins()'>Управление учетными записями администраторов</div>");
+    $("#main").append("<div onclick='showPermissionPatterns()'>Управление шаблонами прав</div>");
+}
+
+function showAdmins()
+{
+    $("#main").empty();
+    $("#panel").empty();
+
+    $.post("mysql.php", { action: "showAdmins" }, function(data)
+    {
+        $("#main").append("<table id='admins'></table>");
+        $("#admins").append("" +
+            "<thead>" +
+            "<tr>" +
+            "<td></td>" +
+            "<td>Логин</td>" +
+            "<td>Набор Прав</td>" +
+            "</tr>" +
+            "</thead><tbody>");
+
+        for( var i = 0; i < data.data.length; i++ )
+        {
+            $("#admins").append("" +
+                "<tr>" +
+                "<td><input id="+ data.data[i][0] +" type='checkbox'/></td>" +
+                "<td>" + data.data[i][1] + "</td>" +
+                "<td id="+ data.data[i][3] +">"+ data.data[i][2] + "</td>" +
+                "</tr>"
+            );
+        }
+
+        $("#admins").append("</tbody>");
+        applyStyleForTable( $("#admins") );
+    },"json");
+
+    $("#panel").append("<button onclick='showFormCreateAdmin()'>Создать</button><button onclick='doWithAdmins(\"edit\")'>Изменить</button><button onclick='doWithAdmins(\"delete\")'>Удалить</button>");
+
+}
+
+function doWithAdmins( what )
+{
+    var checkedAdmins = new Array();
+
+    $("input[type=checkbox]:checked").each( function( index, input ){
+
+        var id = $(input).attr('id');
+        var login = $(input).parent().parent().children()[1].innerHTML;
+        var permission_id = $(input).parent().parent().children()[2].id;
+
+        checkedAdmins.push([id,login, permission_id]);
+    });
+    if ( what == "edit" )
+    {
+        console.log(checkedAdmins);
+    }
+    else if( what == "delete" )
+    {
+        console.log(checkedAdmins);
+    }
+}
+
+function showFormCreateAdmin()
+{
+    $("#main").empty();
+    $("#panel").empty();
+
+    $("#main").append("<h4>Создание учетной записи администратора</h4></br>");
+
+    $("#main").append("<input id='login' type='text' placeholder='Логин' /></br>");
+    $("#main").append("<input id='password' type='password' placeholder='Пароль' /></br>");
+    $("#main").append("<input id='retype_password' type='password' placeholder='Подтверждение пароля' /></br>");
+    $("#main").append("<select id='permissions'></select></br>");
+    $("#main").append("<button onclick='createAdminAccount()'>Создать</button></br>");
+
+    getPermissionList();
+}
+
+function getPermissionList()
+{
+    $.post("mysql.php", { action: "getPermissions" }, function(data)
+    {
+        for( var i = 0; i < data.data.length; i++ )
+        {
+            $("#permissions").append("<option value=" + data.data[i][0] + ">" + data.data[i][1] + "</option>");
+        }
+    },"json");
+}
+
+function createAdminAccount()
+{
+    $.post("mysql.php", { action: "createAdminAccount", login: $("#login").val(), password: $("#password").val(), retype_password: $("#retype_password").val(), permission_id: $("#permissions").val() }, function(data)
+    {
+        if ( data.result == "ok" )
+        {
+            alert("Учетная запись успешно создана");
+            showAdmins();
+        }
+        else if( data.result == "error" )
+        {
+            alert( data.message );
+            showAdmins();
+        }
+    },"json");
+}
+
+function showPermissionPatterns()
+{
+    $("#main").empty();
+    $("#panel").empty();
+
+    $.post("mysql.php", { action: "showPermissionPatterns" }, function(data)
+    {
+        for( var i = 0; i < data.data.length; i++ )
+        {
+            $("#main").append("<table id='permissions'></table>");
+            $("#permissions").append("" +
+                "<thead>" +
+                "<tr>" +
+                "<td>Логин</td>" +
+                "<td>Набор Прав</td>" +
+                "</tr>" +
+                "</thead><tbody>");
+
+            for( var i = 0; i < data.data.length; i++ )
+            {
+                $("#permissions").append("" +
+                    "<tr>" +
+                    "<td>" + data.data[i][0] + "</td>" +
+                    "<td>"+ data.data[i][1] + "</td>" +
+                    "</tr>"
+                );
+            }
+        }
+    },"json");
 }

@@ -95,3 +95,35 @@ INSERT IGNORE INTO `patterns` (`id`, `name`, `traffic`, `access`) VALUES
 
 GRANT USAGE ON *.* TO 'ldap_squid'@'localhost' IDENTIFIED BY PASSWORD '*AA1420F182E88B9E5F874F6FBE7459291E8F4601';
 GRANT ALL PRIVILEGES ON `ldap\_squid`.* TO 'ldap_squid'@'localhost' WITH GRANT OPTION;
+
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `name` VARCHAR(45) NOT NULL ,
+  `addUsers` TINYINT NOT NULL ,
+  `editUsers` TINYINT NOT NULL ,
+  `deleteUsers` TINYINT NOT NULL ,
+  `createPatterns` TINYINT NOT NULL ,
+  `editPatterns` TINYINT NOT NULL ,
+  `deletePatters` TINYINT NOT NULL ,
+  `addDenySites` TINYINT NOT NULL ,
+  `deleteDenySites` TINYINT NOT NULL ,
+  `createAdmins` TINYINT NOT NULL ,
+  `editAdmins` TINYINT NOT NULL ,
+  `deleteAdmins` TINYINT NOT NULL ,
+  `createPermissions` TINYINT NOT NULL ,
+  `editPermissions` TINYINT NOT NULL ,
+  `deletePermissions` TINYINT NOT NULL ,
+  PRIMARY KEY (`id`) );
+
+CREATE TABLE IF NOT EXISTS ldap_squid `admins` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `login` VARCHAR(45) NOT NULL ,
+  `password` VARCHAR(45) NOT NULL ,
+  `permission_id` INT NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `permission_id_idx` (`permission_id` ASC) ,
+  CONSTRAINT `permission_id`
+  FOREIGN KEY (`permission_id` )
+  REFERENCES `ldap_squid`.`permissions` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
