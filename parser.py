@@ -6,7 +6,7 @@ server = "localhost"
 username = "ldap_squid"
 password = "qwerty"
 database = "ldap_squid"
-pathLog = "/var/log/squid3/access.log";
+pathLog = "/var/log/squid/access.log";
 
 try:
     conn = mysql.connector.connect(user=username, password=password, host=server, database=database)
@@ -77,6 +77,10 @@ cursor.execute(query)
 
 result = cursor.fetchall()
 
+query = "SELECT dateTime FROM usersTraffic ORDER BY id DESC LIMIT 1"
+cursor.execute(query)
+last_update = cursor.fetchone()[0]
+
 for row in result:
     last_update = row[0]
     current_traffic = row[1]
@@ -89,9 +93,6 @@ for row in result:
         traffic = float(round(row[0]/1048576, 2)) + current_traffic
 
         if traffic > 0:
-            query = "SELECT dateTime FROM usersTraffic WHERE login=%s ORDER BY id DESC LIMIT 1"
-            cursor.execute(query, (login,))
-            last_update = cursor.fetchone()[0]
             print(login)
             query = "UPDATE users SET trafficForDay=%s, lastUpdate=%s WHERE login=%s"
             cursor.execute(query, (traffic, last_update, login))
