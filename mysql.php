@@ -269,12 +269,7 @@ include 'install/checkconf.php';
         $retype_password = $_POST["retype_password"];
         $permission_id = $_POST["permission_id"];
 
-        if ( $password === $retype_password )
-        {
-            $result = createAdminAccount($mysqli, $login, $password, $permission_id);
-            echo json_encode( array("result" => "ok", "data" => $result) );
-        }
-        else if( $password != $retype_password )
+        if( $password != $retype_password )
         {
             echo json_encode( array("result" => "error", "data" => $result, "message" => "Введенные пароли не совпадают!") );
         }
@@ -282,7 +277,103 @@ include 'install/checkconf.php';
         {
             echo json_encode( array("result" => "error", "data" => $result, "message" => "Вы не заполнили одно из полей!") );
         }
+        else
+        {
+            $result = createAdminAccount($mysqli, $login, $password, $permission_id);
+            echo json_encode( array("result" => "ok", "data" => $result) );
+        }
 
+    }
+    else if( $_POST["action"] == "applyChangesToAdmin" )
+    {
+        $changes = $_POST["changes"];
+
+        foreach( $changes as $change )
+        {
+            $id = $change[0];
+            $login = $change[1];
+            $password = $change[2];
+            $retype_password = $change[3];
+            $permission_id = $change[4];
+
+            if( $password != $retype_password )
+            {
+                echo json_encode( array("result" => "error", "data" => $result, "message" => "Введенные пароли не совпадают!") );
+            }
+            else if( empty($login) or empty($password) or empty($retype_password) or empty($permission_id) )
+            {
+                echo json_encode( array("result" => "error", "data" => $result, "message" => "Вы не заполнили одно из полей!") );
+            }
+            else
+            {
+                applyChangesToAdmin($mysqli, $login, $password, $permission_id, $id);
+            }
+        }
+        echo json_encode( array("result" => "ok", "data" => $result) );
+    }
+    else if( $_POST["action"] == "getPermissionPatterns" )
+    {
+        $query = "SELECT * FROM permissions WHERE 1";
+
+        $result = $mysqli->query( $query ) or die( "select error" );
+        $patternsData = $result->fetch_assoc();
+        echo json_encode( array("result" => "ok", "data" => $patternsData) );
+    }
+    else if( $_POST["action"] == "getPermissionsById" )
+    {
+        $id = $_POST["id"];
+        $statement = $mysqli->prepare("SELECT * FROM permissions WHERE id=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+        $statement->bind_param('i', $id);
+        $statement->execute() or die( "не удалось получить шаблоны прав по id ".$statement->error );
+        $result = $statement->get_result();
+        $permissions = $result->fetch_assoc();
+
+        echo json_encode( array("result" => "ok", "data" => $permissions) );
+    }
+    else if( $_POST["action"] == "applyChangesToPermissions" )
+    {
+        $columns = [];
+        $values = [];
+
+        $id = $_POST["id"];
+        $name = $_POST["name"];
+        $permissions = $_POST["permissions"];
+        foreach ( $permissions as $row )
+        {
+            $column = $row[0];
+            $value = ( $row[1] == "true" ? 1 : 0);
+            array_push( $columns, $column);
+            array_push( $values, $value);
+        }
+
+        if ( !empty( $id ) && empty( $name ) )
+        {
+            $query = "";
+            for ( $i=0; $i < count( $columns ); $i++ )
+            {
+                if ( $i == count( $columns )-1 )
+                {
+                    $query = $query." ".$columns[$i]."=".$values[$i];
+                }
+                else
+                {
+                    $query = $query." ".$columns[$i]."=".$values[$i].",";
+                }
+
+            }
+            $statement = $mysqli->prepare("UPDATE permissions SET ". $query ." WHERE id=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+
+            $statement->bind_param('i', $id );
+            $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
+        }
+        else if ( empty( $id ) && !empty( $name ) )
+        {
+            $statement = $mysqli->prepare("INSERT INTO permissions (name,". implode(",",$columns) .") VALUES(?,".implode(",",$values).")") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+            $statement->bind_param('s', $name);
+            $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
+        }
+
+        echo json_encode( array("result" => "ok", "data" => "INSERT INTO permissions (". implode(",",$columns) .") VALUES(".implode(",",$values).")" ) );
     }
 	else
 	{
@@ -336,5 +427,12 @@ include 'install/checkconf.php';
         $statement = $mysqli->prepare("INSERT INTO admins (login, password, permission_id) VALUES (?, ?, ?)") or die ( "не удалось подготовить запрос: ".$mysqli->error );
         $statement->bind_param('ssi', $login, $password, $permission_id);
         $statement->execute() or die( "не удалось выполнить добавление учетной записи администратора ".$statement->error );
+    }
+
+    function applyChangesToAdmin($mysqli, $login, $password, $permission_id, $id)
+    {
+        $statement = $mysqli->prepare("UPDATE admins SET login=?, password=?, permission_id=? WHERE id=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+        $statement->bind_param('ssii', $login, $password, $permission_id, $id);
+        $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
     }
 ?>

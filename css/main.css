@@ -1,17 +1,7 @@
-ul {
-	margin-top: 5%;
-	float: left;
-	width: 20%;
-	height: 80%;
-}
-
-li {
-	margin-top: 5%;
-}
-
-li div {
-	cursor: pointer;
-}
+#selectable-menu .ui-selecting { background: #B3D4FC; }
+#selectable-menu .ui-selected { background: #3baae3; color: white; }
+#selectable-menu { list-style-type: none; margin: 0; margin-top: 100px; padding: 0; width: 20%; float: left; }
+#selectable-menu li { margin: 3px; padding: 0.4em; font-size: 1.0em; height: 20px; cursor: pointer; }
 
 #main {
 	overflow-y:auto;
@@ -23,10 +13,16 @@ li div {
 
 #main i {
 	color: blue;
+    margin: 0;
+    margin-top: 200px;
 }
 
 #panel {
 	margin-left: 31%;
+}
+
+ul {
+    list-style-type: none;
 }
 
 

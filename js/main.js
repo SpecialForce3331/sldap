@@ -6,7 +6,7 @@ function getMysqlUsers() //получаем пользователей из БД
 				$("#main").append("<h3>Пользователи прокси сервера</h3>");
 				$("#main").append("<table cellspacing='10' id='users'><thead>" +
 						"<tr>" +
-						"<td></td>" +
+						"<td>[]</td>" +
 						"<td>ФИО Пользователя</td>" +
 						"<td>Логин</td>" +
 						"<td>Потребленный траффик (Мбайт)</td>" +
@@ -84,7 +84,7 @@ function getLdapUsers() //получаем список пользователе
                             $("#main").append("<table id='ldapUsers'></table>");
                             $("#ldapUsers").append("<thead>" +
                                 "<tr>" +
-                                "<td></td>" +
+                                "<td>[]</td>" +
                                 "<td>Логин</td>" +
                                 "<td>ФИО</td>" +
                                 "<td>Шаблон</td>" +
@@ -170,11 +170,11 @@ function doWithUsers(what) //работа с пользователями в Б�
 
 function getPatterns() // получаем шаблоны из БД и отображаем
 {
+    $("#main").empty();
 	$.post("mysql.php", { action: "getPatterns" }, function(data)
 			{
-				$("#main").empty();
 				$("#main").append("<table id='patterns'>" +
-						"<thead><tr><td></td>" +
+						"<thead><tr><td>[]</td>" +
 						"<td>Название шаблона</td>" +
 						"<td>Объем траффика в Мбайт</td>" +
 						"<td>Доступ к запрещенным сайтам</td>" +
@@ -197,7 +197,6 @@ function getPatterns() // получаем шаблоны из БД и отоб�
 					$("#patterns").append("<tr><td><input type='checkbox'/></td><td>" + data.result[i][0] + "</td><td>" + data.result[i][1] + "</td><td>" + access + "</td></tr>" );
 				}
                 $("#patterns").append("</tbody>");
-                applyStyleForTable($("#patterns"));
 							
 				$("#panel").empty();
 				$("#panel").append("<div>Операции с шаблонами</div>");
@@ -209,7 +208,7 @@ function getPatterns() // получаем шаблоны из БД и отоб�
 						"<button onclick='deletePattern()'>Удалить</button>" +
 						"");
 			}, "json");
-
+    applyStyleForTable($("#patterns"));
 }
 
 function getPatternsForList() // получаем шаблоны из бд и наполняем выпадающий список при редактировании пользователей этими шаблонами
@@ -231,11 +230,12 @@ function getDenySites() // получаем список запрещенных 
 	$("#main").append("<table id='denySites'>" +
 			"<thead>" +
                 "<tr>" +
-                    "<td></td>" +
+                    "<td>[]</td>" +
                     "<td>Адрес сайта</td>" +
                 "</tr>" +
-            "</thead><tbody>");
-	
+            "</thead></table>");
+	$("#denySites").append("<tbody>");
+
 	$.post("mysql.php", { action: "getDenySites" }, function(data)
 			{ 	
 				for ( var i = 0; i < data.result.length; i++ )
@@ -249,7 +249,7 @@ function getDenySites() // получаем список запрещенных 
                         "</tr>");
 				}
 
-				$("#denySites").append("</tbody></table>");
+				$("#denySites").append("</tbody>");
                applyStyleForTable($("#denySites"));
 
 				$("#panel").append("" +
@@ -283,7 +283,7 @@ function tryPatternToUser() //при клике по шаблону из вып�
 
 function showFormCreatePattern() // отображаем форму для создания шаблона
 {
-	$("#patterns").append("<tr><td></td>" +
+	$("#patterns").append("<tr><td>[]</td>" +
 			"<td><input id='name' type='text' placeholder='Название шаблона'/></td>" +
 			"<td><input id='allowTraffic' type='text' placeholder='Кол-во траффика'/></td>" +
 			"<td>" +
@@ -590,9 +590,11 @@ function cleanSelectAll()
 
 //Передается jquery объект таблицы
 function applyStyleForTable(table) {
-    console.log("apply style for table");
     table.dataTable( {
-        "jQueryUI": true
+        "scrollY":        "500px",
+        "scrollCollapse": true,
+        "paging":         false,
+        "language": {"url": "/sldap/DataTables-1.10.0/russian.lang"}
     } );
 }
 
@@ -609,8 +611,10 @@ function showStatistic()
         "<a href='#'><div onclick=\"getTopList('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div></a>"
     );
 
-    $("#fromDate").datepicker({format:"dd.mm.yyyy"});
-    $("#toDate").datepicker({format:"dd.mm.yyyy"});
+    $.datepicker.formatDate( "dd.mm.yy", new Date());
+
+    $("#fromDate").datepicker();
+    $("#toDate").datepicker();
 }
 
 function getTopList(type, count, fromDate, toDate)
@@ -680,7 +684,7 @@ function showAdmins()
         $("#admins").append("" +
             "<thead>" +
             "<tr>" +
-            "<td></td>" +
+            "<td>[]</td>" +
             "<td>Логин</td>" +
             "<td>Набор Прав</td>" +
             "</tr>" +
@@ -715,11 +719,11 @@ function doWithAdmins( what )
         var login = $(input).parent().parent().children()[1].innerHTML;
         var permission_id = $(input).parent().parent().children()[2].id;
 
-        checkedAdmins.push([id,login, permission_id]);
+        checkedAdmins.push([id, login, permission_id]);
     });
     if ( what == "edit" )
     {
-        console.log(checkedAdmins);
+        showEditAdmins( checkedAdmins );
     }
     else if( what == "delete" )
     {
@@ -737,10 +741,42 @@ function showFormCreateAdmin()
     $("#main").append("<input id='login' type='text' placeholder='Логин' /></br>");
     $("#main").append("<input id='password' type='password' placeholder='Пароль' /></br>");
     $("#main").append("<input id='retype_password' type='password' placeholder='Подтверждение пароля' /></br>");
-    $("#main").append("<select id='permissions'></select></br>");
+    $("#main").append("<select class='permissions'></select></br>");
     $("#main").append("<button onclick='createAdminAccount()'>Создать</button></br>");
 
     getPermissionList();
+}
+
+function showEditAdmins( checkedAdmins )
+{
+    $("#main").empty();
+    $("#panel").empty();
+
+    $("#main").append("<table id='editAdmins'></table>");
+    $("#editAdmins").append("<thead>" +
+        "<tr>" +
+        "<td>Логин</td>" +
+        "<td>Пароль</td>" +
+        "<td>Повтор пароля</td>" +
+        "<td>Шаблон разрешений</td>" +
+        "</tr></thead><tbody>");
+
+    checkedAdmins.forEach( function( admin )
+    {
+        console.log( admin );
+        $("#editAdmins").append("" +
+            "<tr>" +
+            "<td><input id="+admin[0]+" type='text' value="+admin[1]+" /></td>" +
+            "<td><input type='password'/></td>" +
+            "<td><input type='password'/></td>" +
+            "<td><select class='permissions'></select></td>" +
+            "</tr>");
+    });
+
+    $("#editAdmins").append("</tbody>");
+    getPermissionList();
+
+    $("#panel").append("<button onclick='applyChangesToAdmin()'>Применить</button><button onclick='showAdmins()'>Отмена</button>");
 }
 
 function getPermissionList()
@@ -749,14 +785,14 @@ function getPermissionList()
     {
         for( var i = 0; i < data.data.length; i++ )
         {
-            $("#permissions").append("<option value=" + data.data[i][0] + ">" + data.data[i][1] + "</option>");
+            $(".permissions").append("<option value=" + data.data[i][0] + ">" + data.data[i][1] + "</option>");
         }
     },"json");
 }
 
 function createAdminAccount()
 {
-    $.post("mysql.php", { action: "createAdminAccount", login: $("#login").val(), password: $("#password").val(), retype_password: $("#retype_password").val(), permission_id: $("#permissions").val() }, function(data)
+    $.post("mysql.php", { action: "createAdminAccount", login: $("#login").val(), password: $("#password").val(), retype_password: $("#retype_password").val(), permission_id: $(".permissions").val() }, function(data)
     {
         if ( data.result == "ok" )
         {
@@ -771,33 +807,137 @@ function createAdminAccount()
     },"json");
 }
 
+function applyChangesToAdmin()
+{
+    var changes = new Array();
+
+    for( var i = 1; i < $("tr").length; i++ )
+    {
+        var id = $("tr")[i].children[0].children[0].id;
+        var login = $("tr")[i].children[0].children[0].value;
+        var password = $("tr")[i].children[1].children[0].value;
+        var retype_password = $("tr")[i].children[2].children[0].value;
+        var permission_id = $("tr")[i].children[3].children[0].value;
+
+        changes.push([id,login, password, retype_password, permission_id]);
+    }
+    if ( changes.length > 0 )
+    {
+        $.post("mysql.php", { action: "applyChangesToAdmin", changes: changes }, function(data)
+        {
+            if ( data.result == "ok" )
+            {
+                alert("Обновление успешно!");
+                showAdmins();
+            }
+            else if( data.result == "error" )
+            {
+                alert( data.message );
+                showAdmins();
+            }
+        },"json");
+    }
+}
+
 function showPermissionPatterns()
 {
     $("#main").empty();
     $("#panel").empty();
 
-    $.post("mysql.php", { action: "showPermissionPatterns" }, function(data)
-    {
-        for( var i = 0; i < data.data.length; i++ )
-        {
-            $("#main").append("<table id='permissions'></table>");
-            $("#permissions").append("" +
-                "<thead>" +
-                "<tr>" +
-                "<td>Логин</td>" +
-                "<td>Набор Прав</td>" +
-                "</tr>" +
-                "</thead><tbody>");
+    $("#main").append("<button onclick='$(\"#newPattern\").show(); $(\".permissions\").hide();'>Новый шаблон прав</button>" +
+        "<div style='display: none;' id='newPattern'><input id='patternName' type='text' placeholder='Имя шаблона' /><button onclick='showPermissionPatterns()'>Отмена</button></div>");
 
-            for( var i = 0; i < data.data.length; i++ )
+    $("#main").append("<select onchange='getPermissionsById($(this).val())' class='permissions'></select>");
+    $(".permissions").append("<option disabled selected>Выберите шаблон</option>");
+
+    $("#main").append("<ul id='permissionList'></ul>");
+
+    $("#permissionList").append("<li><label>Пользователи</label>" +
+        "<ul>" +
+            "<li><label><input id='addUsers' type='checkbox'/>Добавление пользователей</label></li>" +
+            "<li><label><input id='editUsers' type='checkbox'/>Редактирование пользователей</label></li>" +
+            "<li><label><input id='deleteUsers' type='checkbox'/>Удаление пользователей</label></li>" +
+        "</ul>" +
+    "</li>");
+
+    $("#permissionList").append("<li><label>Шаблоны траффика</label>" +
+        "<ul>" +
+            "<li><label><input id='createPatterns' type='checkbox'/>Добавление шаблонов</label></li>" +
+            "<li><label><input id='editPatterns' type='checkbox'/>Редактирование шаблонов</label></li>" +
+            "<li><label><input id='deletePatterns' type='checkbox'/>Удаление шаблонов</label></li>" +
+        "</ul>" +
+    "</li>");
+
+    $("#permissionList").append("<li><label>Запрещенные сайты</label>" +
+        "<ul>" +
+            "<li><label><input id='addDenySites' type='checkbox'/>Добавление сайтов</label></li>" +
+            "<li><label><input id='deleteDenySites' type='checkbox'/>Удаление сайтов</label></li>" +
+        "</ul>" +
+    "</li>");
+
+    $("#permissionList").append("<li><label>Администраторы</label>" +
+        "<ul>" +
+            "<li><label><input id='createAdmins' type='checkbox'/>Добавление администраторов</label></li>" +
+            "<li><label><input id='editAdmins' type='checkbox'/>Редактирование администраторов</label></li>" +
+            "<li><label><input id='deleteAdmins' type='checkbox'/>Удаление администраторов</label></li>" +
+        "</ul>" +
+    "</li>");
+
+    $("#permissionList").append("<li><label>Шаблоны прав доступа</label>" +
+        "<ul>" +
+            "<li><label><input id='createPermissions' type='checkbox'/>Добавление шаблона прав</label></li>" +
+            "<li><label><input id='editPermissions' type='checkbox'/>Редактирование шаблона прав</label></li>" +
+            "<li><label><input id='deletePermissions' type='checkbox'/>Удаление шаблона прав</label></li>" +
+        "</ul>" +
+    "</li>");
+
+
+    getPermissionList();
+
+    $("#panel").append("<button onclick='applyChangesToPermissions()'>Применить изменения</button>")
+
+}
+
+function getPermissionsById(id)
+{
+    $("input[type=checkbox]:checked").each(function(index, checkbox){ $(checkbox).prop("checked",false)});
+
+    $.post("mysql.php", { action: "getPermissionsById", id: id }, function( data )
+    {
+        var data = data.data;
+
+        for ( var key in data)
+        {
+            if( data[key] )
             {
-                $("#permissions").append("" +
-                    "<tr>" +
-                    "<td>" + data.data[i][0] + "</td>" +
-                    "<td>"+ data.data[i][1] + "</td>" +
-                    "</tr>"
-                );
+                $("#" + key).prop("checked", true);
             }
+        }
+    },"json");
+}
+
+function applyChangesToPermissions()
+{
+    var id = $(".permissions").val();
+    var permissions = new Array();
+    var name = $("#patternName").val();
+
+    $("input[type=checkbox]").each( function(index, row){
+        console.log( $(row).attr("id"), $(row).prop("checked") );
+        permissions.push( [$(row).attr("id"), $(row).prop("checked")] );
+
+    });
+
+    $.post("mysql.php", { action: "applyChangesToPermissions", id: id, name: name, permissions: permissions }, function( data )
+    {
+        if( data.result == "error" )
+        {
+            alert( data.message );
+        }
+        else
+        {
+            alert( data.message );
+            showPermissionPatterns();
         }
     },"json");
 }

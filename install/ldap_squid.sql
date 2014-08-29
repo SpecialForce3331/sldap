@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `deletePermissions` TINYINT NOT NULL ,
   PRIMARY KEY (`id`) );
 
-CREATE TABLE IF NOT EXISTS ldap_squid `admins` (
+CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `login` VARCHAR(45) NOT NULL ,
   `password` VARCHAR(45) NOT NULL ,
