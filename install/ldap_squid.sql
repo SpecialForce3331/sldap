@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `deleteUsers` TINYINT NOT NULL ,
   `createPatterns` TINYINT NOT NULL ,
   `editPatterns` TINYINT NOT NULL ,
-  `deletePatters` TINYINT NOT NULL ,
+  `deletePatterns` TINYINT NOT NULL ,
   `addDenySites` TINYINT NOT NULL ,
   `deleteDenySites` TINYINT NOT NULL ,
   `createAdmins` TINYINT NOT NULL ,

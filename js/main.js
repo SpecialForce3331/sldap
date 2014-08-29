@@ -929,7 +929,7 @@ function applyChangesToPermissions()
     $.post("mysql.php", { action: "applyChangesToPermissions", id: id, name: name, permissions: permissions }, function( data )
     {
         alert( data.message );
-        
+
         if( data.result != "error" )
         {
             showPermissionPatterns();
