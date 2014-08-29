@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Структура таблицы `usersTraffic`
 --
 
-CREATE TABLE `usersTraffic` (
+CREATE TABLE IF NOT EXISTS `usersTraffic` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `login` varchar(50) NOT NULL,
   `site` text,

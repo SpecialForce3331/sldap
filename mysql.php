@@ -373,7 +373,7 @@ include 'install/checkconf.php';
             $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
         }
 
-        echo json_encode( array("result" => "ok", "data" => "INSERT INTO permissions (". implode(",",$columns) .") VALUES(".implode(",",$values).")" ) );
+        echo json_encode( array("result" => "ok", "message" => "Успешно внесены изменения шаблона прав" ) );
     }
 	else
 	{

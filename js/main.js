@@ -923,20 +923,15 @@ function applyChangesToPermissions()
     var name = $("#patternName").val();
 
     $("input[type=checkbox]").each( function(index, row){
-        console.log( $(row).attr("id"), $(row).prop("checked") );
         permissions.push( [$(row).attr("id"), $(row).prop("checked")] );
-
     });
 
     $.post("mysql.php", { action: "applyChangesToPermissions", id: id, name: name, permissions: permissions }, function( data )
     {
-        if( data.result == "error" )
+        alert( data.message );
+        
+        if( data.result != "error" )
         {
-            alert( data.message );
-        }
-        else
-        {
-            alert( data.message );
             showPermissionPatterns();
         }
     },"json");
