@@ -242,9 +242,9 @@ function getDenySites() // получаем список запрещенных 
             $("#denySites").append("" +
                 "<tr>" +
                 "<td>" +
-                "<input type='checkbox' />" +
+                "<input type='checkbox' id=" + data.result[i][0] + " />" +
                 "</td>" +
-                "<td>" + data.result[i] + "</td>" +
+                "<td>" + data.result[i][1] + "</td>" +
                 "</tr>");
         }
 
@@ -533,6 +533,20 @@ function createDenySite()
 		url.push( $("input")[i].value );
 	}
     sendAJAXCommand("mysql.php",{action: "createDenySite", url: url}, getDenySites);
+}
+
+function showEditDenySite()
+{
+    var checkedSites = [];
+
+    $("input[type=checkbox]:checked").each(function(){
+        checkedSites.push( [ $(this).attr("id"), $(this).parent().next().html() ] );
+    });
+
+    $("#main").empty();
+    $("#panel").empty();
+
+
 }
 
 function deleteDenySite()

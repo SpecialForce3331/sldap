@@ -30,6 +30,7 @@ include 'install/checkconf.php';
 
     header('Content-Type: application/json');
 //Начало секции обработки пользовательских запросов
+
 	if ( $_POST["action"] == "auth" )
     {
         $login = $_POST["login"];
@@ -101,6 +102,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "addUsers" ) //добавляем пользователей в БД
 	{
+        if ( !checkPermissions($mysqli, "addUsers") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$data = $_POST["data"];
 
 		$query = "INSERT INTO users (login,name,pattern_id) VALUES ";
@@ -124,6 +131,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "deleteUsers" ) //удаляем пользователей из БД
 	{
+        if ( !checkPermissions($mysqli, "deleteUsers") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$data = $_POST["data"];
 		
 		$query = "DELETE FROM users WHERE login IN (";
@@ -155,6 +168,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "createPattern" ) //создаем шаблоны и добавляем в БД
 	{
+        if ( !checkPermissions($mysqli, "createPatterns") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$name = $_POST["name"];
 		$traffic = $_POST["traffic"];
 		$access = $_POST["access"];
@@ -173,6 +192,13 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "deletePattern" ) //удаляем шаблон из БД
 	{
+
+        if ( !checkPermissions($mysqli, "deletePatterns") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$patterns = $_POST["patterns"];
 		
 		$query = "DELETE FROM patterns WHERE name in (";
@@ -194,6 +220,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "applyChangesToUsers" ) //применение изменений к пользователям
 	{
+        if ( !checkPermissions($mysqli, "editUsers") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$changes = $_POST["changes"];
 		
 		for ( $i = 0; $i < count($changes); $i++ )
@@ -205,6 +237,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "applyChangesToPatterns" )
 	{
+        if ( !checkPermissions($mysqli, "editPatterns") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$changes = $_POST["changes"];
 		
 		for ( $i = 0; $i < count($changes); $i++ )
@@ -217,12 +255,18 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "getDenySites" )
 	{
-		$query = $mysqli->query( "SELECT url FROM denySites WHERE 1") or die( "can not update patterns ".$mysqli->error );
+		$query = $mysqli->query( "SELECT id, url FROM denySites WHERE 1") or die( "can not update patterns ".$mysqli->error );
 		$result = $query->fetch_all( MYSQLI_NUM );
 		echo json_encode( array("result" => $result ));
 	}
 	else if( $_POST["action"] == "createDenySite" )
 	{
+        if ( !checkPermissions($mysqli, "addDenySites") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$url = $_POST["url"];
 		
 		$query = "INSERT INTO denySites (url) VALUES ";
@@ -251,6 +295,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "deleteDenySite")
 	{
+        if ( !checkPermissions($mysqli, "deleteDenySites") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$url = $_POST["url"];
 		
 		$query = "DELETE FROM denySites WHERE url in (";
@@ -292,6 +342,11 @@ include 'install/checkconf.php';
     }
     else if( $_POST["action"] == "createAdminAccount" )
     {
+        if ( !checkPermissions($mysqli, "createAdmins") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
         $login = $_POST["login"];
         $password = $_POST["password"];
         $retype_password = $_POST["retype_password"];
@@ -314,6 +369,12 @@ include 'install/checkconf.php';
     }
     else if( $_POST["action"] == "applyChangesToAdmin" )
     {
+        if ( !checkPermissions($mysqli, "editAdmins") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
         $changes = $_POST["changes"];
 
         foreach( $changes as $change )
@@ -360,6 +421,12 @@ include 'install/checkconf.php';
     }
     else if( $_POST["action"] == "applyChangesToPermissions" )
     {
+        if ( !checkPermissions($mysqli, "editPermissions") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
         $columns = [];
         $values = [];
 
