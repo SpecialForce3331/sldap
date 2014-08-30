@@ -8,7 +8,8 @@
 			
 				<body>
 					<center>
-						<form action="main.php" method="POST">
+						<form action="mysql.php" method="POST">
+						    <input type="text" style="display: none" name="action" value="auth"/></br>
 							<span>Login</span><br><input name="login" type="text" /><br>
 							<span>Password</span><br><input name="password" type="password" /><br>
 							<input type="submit" value="Вход" />

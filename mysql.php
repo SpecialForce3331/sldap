@@ -10,6 +10,8 @@ include 'install/checkconf.php';
 // 	$password = "qwerty";
 // 	$database = "ldap_squid";
 
+    session_start();
+
 	$server = $MysqlIp;
 	$username = $MysqlLogin;
 	$password = $MysqlPassword;
@@ -28,8 +30,29 @@ include 'install/checkconf.php';
 
     header('Content-Type: application/json');
 //Начало секции обработки пользовательских запросов
-	
-	if ( $_POST["action"] == "getMysqlUsers" ) //получаем пользователей и инфу о них из БД
+	if ( $_POST["action"] == "auth" )
+    {
+        $login = $_POST["login"];
+        $password = $_POST["password"];
+
+        $statement = $mysqli->prepare("SELECT id FROM admins WHERE login=? AND password=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+        $statement->bind_param('ss', $login, $password);
+        $statement->execute() or die( "не удалось получить данные администратора ".$statement->error );
+        $result = $statement->get_result();
+        $answer = $result->fetch_row();
+        $id = $answer[0];
+        if ( !is_null($id) )
+        {
+            $_SESSION["session"] = session_id();
+            $_SESSION["user_id"] = $id;
+            header('Location: main.php' );
+        }
+        else
+        {
+            header('Location: index.php' );
+        }
+    }
+	else if ( $_POST["action"] == "getMysqlUsers" ) //получаем пользователей и инфу о них из БД
 	{
 		$result = $mysqli->query( "SELECT users.login,users.name,users.trafficForDay,patterns.traffic,patterns.name,patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id ORDER BY users.name" ) or die("can not get users ".$mysqli->error );;
 		
@@ -39,7 +62,6 @@ include 'install/checkconf.php';
 		}
 		else
 		{
-
             $data = $result->fetch_all( MYSQLI_NUM );
 
 			$answer = array("result" => $data);
@@ -49,6 +71,12 @@ include 'install/checkconf.php';
 	}
 	else if ( $_POST["action"] == "cleanTraffic" ) //очистка траффика пользователей
 	{
+        if ( !checkPermissions($mysqli, "editUsers") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
 		$users = $_POST["data"];
 		
 		$query = "UPDATE users SET trafficForDay= 0 WHERE login in (";
@@ -68,7 +96,7 @@ include 'install/checkconf.php';
 		
 		$mysqli->query( $query ) or die("can not erase users traffic ".$mysqli->error );
 		
-		echo json_encode( array( "result" => "ok" ));
+		echo json_encode( array( "result" => "ok", "message" => "Траффик пользователей успешно очищен." ));
 		
 	}
 	else if ( $_POST["action"] == "addUsers" ) //добавляем пользователей в БД
@@ -90,7 +118,7 @@ include 'install/checkconf.php';
 		}
 		
 		$mysqli->query( $query ) or die("insert error: ".$mysqli->error."\n");
-		$data = array("result" => "ok" );
+		$data = array("result" => "ok", "message" => "Выбранные пользователи успешно добавлены." );
 		echo json_encode( $data );
 		
 	}
@@ -113,7 +141,7 @@ include 'install/checkconf.php';
 		}	
 		
 		$mysqli->query( $query ) or die( $mysqli->error." delete error");
-		$data = array("result" => "ok" );
+		$data = array("result" => "ok", "message" => "Выбранные пользователи успешно удалены." );
 		echo json_encode( $data );
 	}
 	else if ( $_POST["action"] == "getPatterns" ) //получаем шаблоны из БД
@@ -136,11 +164,11 @@ include 'install/checkconf.php';
 			$query = "INSERT INTO patterns (name,traffic,access) VALUES ('".$name."','".$traffic."','".$access."')";
 			$result = $mysqli->query( $query ) or die("insert pattert error");
 			
-			echo json_encode( array("result"=>"ok") );
+			echo json_encode( array("result"=>"ok", "message" => "Шаблон успешно создан.") );
 		}
 		else
 		{
-			echo json_encode( array("result"=>"false" ));
+			echo json_encode( array("result"=>"false", "message" => "Вы заполнили не все поля" ));
 		}	
 	}
 	else if ( $_POST["action"] == "deletePattern" ) //удаляем шаблон из БД
@@ -162,7 +190,7 @@ include 'install/checkconf.php';
 		}
 		
 		$mysqli->query( $query ) or die( "can not delete patterns: ".$mysqli->error );
-		echo json_encode( array( "result" => "ok" ));
+		echo json_encode( array( "result" => "ok", "message" => "Шаблон(ы) успешно удален" ));
 	}
 	else if ( $_POST["action"] == "applyChangesToUsers" ) //применение изменений к пользователям
 	{
@@ -173,7 +201,7 @@ include 'install/checkconf.php';
 			$query = "UPDATE users SET pattern_id=\"".$changes[$i][2]."\" WHERE login=\"".$changes[$i][0]."\"";
 			$mysqli->query( $query ) or die("cannot update users for changes ".$mysqli->error );
 		}	
-		echo json_encode( array( "result" => "ok" ));
+		echo json_encode( array( "result" => "ok", "message" => "Изменения успешно применены." ));
 	}
 	else if ( $_POST["action"] == "applyChangesToPatterns" )
 	{
@@ -185,7 +213,7 @@ include 'install/checkconf.php';
 			$mysqli->query( $query ) or die("can not update patterns: ".$mysqli->error );
 		}
 		
-		echo json_encode( array( "result" => "ok") );
+		echo json_encode( array( "result" => "ok", "message" => "Изменения успешно применены." ) );
 	}
 	else if ( $_POST["action"] == "getDenySites" )
 	{
@@ -219,7 +247,7 @@ include 'install/checkconf.php';
 			$query = substr($query, 0, -1);
 		}
 		$mysqli->query( $query ) or die("can not insert site in deny table ".$mysqli->error );
-		echo json_encode( array("result" => "ok" ));
+		echo json_encode( array("result" => "ok", "message" => "Запрещенный сайт(ы) успешно создан(ы)."  ));
 	}
 	else if ( $_POST["action"] == "deleteDenySite")
 	{
@@ -241,7 +269,7 @@ include 'install/checkconf.php';
 		
 		$mysqli->query( $query ) or die("can not delete deny site ".$mysqli->error );
 		
-		echo json_encode( array("result" => "ok") );
+		echo json_encode( array("result" => "ok", "message" => "Запрещенный сайт(ы) успешно удален(ы)."  ) );
     }
     else if( $_POST["action"] == "getTop" )
     {
@@ -271,16 +299,16 @@ include 'install/checkconf.php';
 
         if( $password != $retype_password )
         {
-            echo json_encode( array("result" => "error", "data" => $result, "message" => "Введенные пароли не совпадают!") );
+            echo json_encode( array("result" => "error", "message" => "Введенные пароли не совпадают!") );
         }
         else if( empty($login) or empty($password) or empty($retype_password) or empty($permission_id) )
         {
-            echo json_encode( array("result" => "error", "data" => $result, "message" => "Вы не заполнили одно из полей!") );
+            echo json_encode( array("result" => "error", "message" => "Вы не заполнили одно из полей!") );
         }
         else
         {
             $result = createAdminAccount($mysqli, $login, $password, $permission_id);
-            echo json_encode( array("result" => "ok", "data" => $result) );
+            echo json_encode( array("result" => "ok", "data" => $result, "message" => "Учетная запись администратора успешно создана") );
         }
 
     }
@@ -298,18 +326,18 @@ include 'install/checkconf.php';
 
             if( $password != $retype_password )
             {
-                echo json_encode( array("result" => "error", "data" => $result, "message" => "Введенные пароли не совпадают!") );
+                echo json_encode( array("result" => "error", "message" => "Введенные пароли не совпадают!") );
             }
             else if( empty($login) or empty($password) or empty($retype_password) or empty($permission_id) )
             {
-                echo json_encode( array("result" => "error", "data" => $result, "message" => "Вы не заполнили одно из полей!") );
+                echo json_encode( array("result" => "error", "message" => "Вы не заполнили одно из полей!") );
             }
             else
             {
                 applyChangesToAdmin($mysqli, $login, $password, $permission_id, $id);
+                echo json_encode( array("result" => "ok", "data" => $result) );
             }
         }
-        echo json_encode( array("result" => "ok", "data" => $result) );
     }
     else if( $_POST["action"] == "getPermissionPatterns" )
     {
@@ -377,7 +405,7 @@ include 'install/checkconf.php';
     }
 	else
 	{
-		$data = array("result" => "false" );
+		$data = array("result" => "error", "message" => "Запрошенного действия не существует." );
 		echo json_encode( $data );
 	}
 
@@ -434,5 +462,36 @@ include 'install/checkconf.php';
         $statement = $mysqli->prepare("UPDATE admins SET login=?, password=?, permission_id=? WHERE id=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
         $statement->bind_param('ssii', $login, $password, $permission_id, $id);
         $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
+    }
+
+    function checkPermissions($mysqli, $permission)
+    {
+        if ( $permission == "addUsers" or
+            $permission == "editUsers" or
+            $permission == "deleteUsers" or
+            $permission == "createPatterns" or
+            $permission == "editPatterns" or
+            $permission == "deletePatterns" or
+            $permission == "addDenySites" or
+            $permission == "deleteDenySites" or
+            $permission == "createAdmins" or
+            $permission == "editAdmins" or
+            $permission == "deleteAdmins" or
+            $permission == "createPermissions" or
+            $permission == "editPermissions" or
+            $permission == "deletePermissions"
+        )
+        {
+            $query = "SELECT ".$permission." FROM permissions LEFT JOIN admins ON (permissions.id = admins.permission_id) WHERE admins.id = ".$_SESSION["user_id"];
+            $result = $mysqli->query( $query ) or die( $mysqli->error." | select permission error" );
+            $access = $result->fetch_row();
+
+            $answer = $access[0] == 1 ? true : false;
+            return $answer;
+        }
+        else
+        {
+            return "Запрошенных прав не существует";
+        }
     }
 ?>

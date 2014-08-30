@@ -6,13 +6,8 @@
 	$redirect = "index.php";
 	
 	session_start();
-	
-	if ( !empty( $_POST["login"] ) && $_POST["login"] == $login && $_POST["password"] == $password )
-	{	
-		$_SESSION["session"] = session_id();
-		showContent();
-	}
-	else if( isset( $_SESSION["session"] ) )
+
+	if( isset( $_SESSION["session"] ) )
 	{	
 		showContent();
 	}

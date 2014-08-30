@@ -1,119 +1,120 @@
 function getMysqlUsers() //получаем пользователей из БД MySQL
 {
-	$.post("mysql.php", { action: "getMysqlUsers" }, function(data)
-			{	
-				$("#main").empty();
-				$("#main").append("<h3>Пользователи прокси сервера</h3>");
-				$("#main").append("<table cellspacing='10' id='users'><thead>" +
-						"<tr>" +
-						"<td>[]</td>" +
-						"<td>ФИО Пользователя</td>" +
-						"<td>Логин</td>" +
-						"<td>Потребленный траффик (Мбайт)</td>" +
-						"<td>Разрешенный траффик (Мбайт)</td>" +
-						"<td>Примененный шаблон</td>" +
-						"<td>Доступ к запрещенным сайтам</td>" +
-						"</tr>" +
-						"</thead><tbody></table>");
-				
-				var access;
-				var allowTraffic;
-				
-				for ( var i = 0; i < data.result.length; i++ ) //парсим ответ
-					{
-					
-						if ( data.result[i][5] != 0 ) //вместо 0 и 1 выводим словами
-							{
-								access = "Есть";
-							}
-						else
-							{
-								access = "Нет";
-							}
-						if ( data.result[i][3] == 0 ) //если траффик у пользователя  0  = безлимит
-							{
-								allowTraffic = "безлимит"
-							}
-						else
-							{
-								allowTraffic = data.result[i][3];
-							}
+    sendAJAXCommand("mysql.php",{action: "getMysqlUsers"}, function(data){
 
-						$("#users").append("<tr>" +
-								"<span>" +
-								"<td><input type='checkbox'/></td>" +
-								"<td width='40%'>" + data.result[i][1] + " </td>" + 	//ФИО
-								"<td>" + data.result[i][0] + "</td>" + 					//Логин
-								"<td>" + data.result[i][2] + "</td>" + 					//Потребленный траффик
-								"<td>" + allowTraffic + "</td>" +						//Разрешенный траффик
-								"<td>" + data.result[i][4] + "</td>" +					//Примененный шаблон
-								"<td>" + access + "</td>" +								//Доступ к запрещенным сайтам
-								"</span></tr>");
-					}
-                $("#users").append("</tbody>");
-                applyStyleForTable($("#users"));
-				
-				$("#panel").empty();
-				$("#panel").append("" +
-						"<button onclick='selectAll()'>Выбрать всех</button>" +
-						"<button onclick='cleanSelectAll()'>Снять выбор со всех</button>");
-				$("#panel").append("" +
-						"<button onclick='doWithUsers(\"cleanTraffic\")'>Обнулить траффик</button>" +
-						"<button onclick='showEditUsers()'>Изменить</button>" +
-						"<button onclick='doWithUsers(\"deleteUsers\")'>Удалить</button>");	
-				$("#panel").append("<br>" +
-						"<button onclick='appyPatternToUsers()'>Применить шаблон на выбранных пользователей: </button>" +
-						"<select class='patterns'>" +
-						"</select");
-					getPatternsForList();
-			}, "json");
+        $("#main").empty();
+        $("#main").append("<h3>Пользователи прокси сервера</h3>");
+        $("#main").append("<table cellspacing='10' id='users'><thead>" +
+            "<tr>" +
+            "<td>[]</td>" +
+            "<td>ФИО Пользователя</td>" +
+            "<td>Логин</td>" +
+            "<td>Потребленный траффик (Мбайт)</td>" +
+            "<td>Разрешенный траффик (Мбайт)</td>" +
+            "<td>Примененный шаблон</td>" +
+            "<td>Доступ к запрещенным сайтам</td>" +
+            "</tr>" +
+            "</thead><tbody></table>");
+
+        var access;
+        var allowTraffic;
+
+        for ( var i = 0; i < data.result.length; i++ ) //парсим ответ
+        {
+
+            if ( data.result[i][5] != 0 ) //вместо 0 и 1 выводим словами
+            {
+                access = "Есть";
+            }
+            else
+            {
+                access = "Нет";
+            }
+            if ( data.result[i][3] == 0 ) //если траффик у пользователя  0  = безлимит
+            {
+                allowTraffic = "безлимит"
+            }
+            else
+            {
+                allowTraffic = data.result[i][3];
+            }
+
+            $("#users").append("<tr>" +
+                "<span>" +
+                "<td><input type='checkbox'/></td>" +
+                "<td width='40%'>" + data.result[i][1] + " </td>" + 	//ФИО
+                "<td>" + data.result[i][0] + "</td>" + 					//Логин
+                "<td>" + data.result[i][2] + "</td>" + 					//Потребленный траффик
+                "<td>" + allowTraffic + "</td>" +						//Разрешенный траффик
+                "<td>" + data.result[i][4] + "</td>" +					//Примененный шаблон
+                "<td>" + access + "</td>" +								//Доступ к запрещенным сайтам
+                "</span></tr>");
+        }
+        $("#users").append("</tbody>");
+        applyStyleForTable($("#users"));
+
+        $("#panel").empty();
+        $("#panel").append("" +
+            "<button onclick='selectAll()'>Выбрать всех</button>" +
+            "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>");
+        $("#panel").append("" +
+            "<button onclick='doWithUsers(\"cleanTraffic\")'>Обнулить траффик</button>" +
+            "<button onclick='showEditUsers()'>Изменить</button>" +
+            "<button onclick='doWithUsers(\"deleteUsers\")'>Удалить</button>");
+        $("#panel").append("<br>" +
+            "<button onclick='appyPatternToUsers()'>Применить шаблон на выбранных пользователей: </button>" +
+            "<select class='patterns'>" +
+            "</select");
+        getPatternsForList();
+    }, true);
 }
 
 function getLdapUsers() //получаем список пользователей из AD
 {
-	$.post("mysql.php", { action: "getMysqlUsers" }, function(data)
-			{
-				var existUsers = data.result;
-				
-				$.post("ldap.php", { action: "getLdapUsers", existUsers: existUsers }, function(data)
-						{
-							$("#main").empty();
-                            $("#panel").empty();
-							$("#main").append("<h3>Список пользователей из AD</h3><b>Здесь отображаются еще не добавленные пользователи.</b><br>");
+    sendAJAXCommand("mysql.php",{action: "getMysqlUsers"}, function(data){
 
-                            $("#main").append("<table id='ldapUsers'></table>");
-                            $("#ldapUsers").append("<thead>" +
-                                "<tr>" +
-                                "<td>[]</td>" +
-                                "<td>Логин</td>" +
-                                "<td>ФИО</td>" +
-                                "<td>Шаблон</td>" +
-                                "</tr></thead><tbody>");
+        var existUsers = data.result;
 
-                            for ( var i = 0; i < data.result.count; i++ )
-								{
-									var name = data.result[i]["dn"];
-									name = name.split(",")
-									name = name[0].substr(3);
-									
-									if (!data.result[i]["samaccountname"]){continue}
-									var sam = data.result[i]["samaccountname"][0];
+        sendAJAXCommand("ldap.php",{action: "getLdapUsers", existUsers: existUsers}, function(data){
 
-									$("#ldapUsers").append("<tr>" +
-											"<td><input type='checkbox'/></td>" +
-											"<td>" + name + "</td>" +
-											"<td>" + sam + "</td>" +
-                                            "<td><select class='patterns'></select></td>" +
-											"</tr>");
+            $("#main").empty();
+            $("#panel").empty();
+            $("#main").append("<h3>Список пользователей из AD</h3><b>Здесь отображаются еще не добавленные пользователи.</b><br>");
 
-								}
-                            $("#ldapUsers").append("</tbody>");
-                            getPatternsForList();
-                            applyStyleForTable($("#ldapUsers"));
+            $("#main").append("<table id='ldapUsers'></table>");
+            $("#ldapUsers").append("<thead>" +
+                "<tr>" +
+                "<td>[]</td>" +
+                "<td>Логин</td>" +
+                "<td>ФИО</td>" +
+                "<td>Шаблон</td>" +
+                "</tr></thead><tbody>");
 
-							$("#panel").append("<button onclick='selectAll()'>Выбрать всех</button><button onclick='cleanSelectAll()'>Снять выбор со всех</button><button onclick='doWithUsers(\"addUsers\")'>Добавить</button>");
-						}, "json");
-			}, "json");
+            for ( var i = 0; i < data.result.count; i++ )
+            {
+                var name = data.result[i]["dn"];
+                name = name.split(",")
+                name = name[0].substr(3);
+
+                if (!data.result[i]["samaccountname"]){continue}
+                var sam = data.result[i]["samaccountname"][0];
+
+                $("#ldapUsers").append("<tr>" +
+                    "<td><input type='checkbox'/></td>" +
+                    "<td>" + name + "</td>" +
+                    "<td>" + sam + "</td>" +
+                    "<td><select class='patterns'></select></td>" +
+                    "</tr>");
+
+            }
+            $("#ldapUsers").append("</tbody>");
+            getPatternsForList();
+            applyStyleForTable($("#ldapUsers"));
+
+            $("#panel").append("<button onclick='selectAll()'>Выбрать всех</button><button onclick='cleanSelectAll()'>Снять выбор со всех</button><button onclick='doWithUsers(\"addUsers\")'>Добавить</button>");
+
+        }, true);
+    }, true);
 }
 
 function doWithUsers(what) //работа с пользователями в БД Mysql
@@ -134,30 +135,27 @@ function doWithUsers(what) //работа с пользователями в Б�
 		{
 			$.post("mysql.php", { action: what, data: checkedUsers }, function(data)
 					{
-						$("#main").empty();
-						
-						if ( what == "addUsers") 
-						{
-					        alert("Пользователи успешно добавлены.");
-                            getLdapUsers();
-						}
-						else if ( what == "deleteUsers" ) 
-						{
-                            alert("Пользователи успешно удалены.");
-                            getMysqlUsers();
-						}
-						else if ( what == "cleanTraffic" )
-						{
-                            alert("Траффик выбранных пользователей успещно очищен.");
-                            getMysqlUsers();
-						}
-						else 
-						{
-                            alert("Некорректный запрос.");
-                            getMysqlUsers();
-						}
-						
-						$("#panel").empty();
+						if ( data.result == "ok" )
+                        {
+                            $("#main").empty();
+                            $("#panel").empty();
+
+                            if ( what == "addUsers")
+                            {
+                                getLdapUsers();
+                            }
+                            else if ( what == "deleteUsers" )
+                            {
+                                getMysqlUsers();
+                            }
+                            else if ( what == "cleanTraffic" )
+                            {
+                                getMysqlUsers();
+                            }
+                        }
+
+						alert(data.message);
+
 					}, "json");
 		
 		}
@@ -171,55 +169,57 @@ function doWithUsers(what) //работа с пользователями в Б�
 function getPatterns() // получаем шаблоны из БД и отображаем
 {
     $("#main").empty();
-	$.post("mysql.php", { action: "getPatterns" }, function(data)
-			{
-				$("#main").append("<table id='patterns'>" +
-						"<thead><tr><td>[]</td>" +
-						"<td>Название шаблона</td>" +
-						"<td>Объем траффика в Мбайт</td>" +
-						"<td>Доступ к запрещенным сайтам</td>" +
-						"</tr></thead>" +
-						"<tbody></table>");
-				
-				var access;//доступ к запрещенным сайтам аля вконтакте
-				
-				for ( var i = 0; i < data.result.length; i++ )
-				{
-					if ( data.result[i][2] != "0" )
-					{
-						access = "есть";
-					}
-					else
-					{
-						access = "нет";
-					}
-					
-					$("#patterns").append("<tr><td><input type='checkbox'/></td><td>" + data.result[i][0] + "</td><td>" + data.result[i][1] + "</td><td>" + access + "</td></tr>" );
-				}
-                $("#patterns").append("</tbody>");
-							
-				$("#panel").empty();
-				$("#panel").append("<div>Операции с шаблонами</div>");
-				$("#panel").append("" +
-						"<button onclick='selectAll()'>Выделить все</button>" +
-						"<button onclick='cleanSelectAll()'>Снять выделение</button>" +
-						"<button onclick='showFormCreatePattern()'>Создать</button>" +
-						"<button onclick='showEditPattern()'>Изменить</button>" +
-						"<button onclick='deletePattern()'>Удалить</button>" +
-						"");
-			}, "json");
+
+    sendAJAXCommand("mysql.php",{action: "getPatterns"}, function(data){
+
+        $("#main").append("<table id='patterns'>" +
+            "<thead><tr><td>[]</td>" +
+            "<td>Название шаблона</td>" +
+            "<td>Объем траффика в Мбайт</td>" +
+            "<td>Доступ к запрещенным сайтам</td>" +
+            "</tr></thead>" +
+            "<tbody></table>");
+
+        var access;//доступ к запрещенным сайтам аля вконтакте
+
+        for ( var i = 0; i < data.result.length; i++ )
+        {
+            if ( data.result[i][2] != "0" )
+            {
+                access = "есть";
+            }
+            else
+            {
+                access = "нет";
+            }
+
+            $("#patterns").append("<tr><td><input type='checkbox'/></td><td>" + data.result[i][0] + "</td><td>" + data.result[i][1] + "</td><td>" + access + "</td></tr>" );
+        }
+        $("#patterns").append("</tbody>");
+
+        $("#panel").empty();
+        $("#panel").append("<div>Операции с шаблонами</div>");
+        $("#panel").append("" +
+            "<button onclick='selectAll()'>Выделить все</button>" +
+            "<button onclick='cleanSelectAll()'>Снять выделение</button>" +
+            "<button onclick='showFormCreatePattern()'>Создать</button>" +
+            "<button onclick='showEditPattern()'>Изменить</button>" +
+            "<button onclick='deletePattern()'>Удалить</button>" +
+            "");
+    }, true);
+
     applyStyleForTable($("#patterns"));
 }
 
 function getPatternsForList() // получаем шаблоны из бд и наполняем выпадающий список при редактировании пользователей этими шаблонами
 {
-	$.post("mysql.php", { action: "getPatterns" }, function(data)
-			{ 	
-				for ( var i = 0; i < data.result.length; i++ )
-				{
-					$(".patterns").each(function(){ $(this).append("<option value='" + data.result[i][3] + "'>" + data.result[i][0] + "</option>")});
-				}		
-			}, "json");
+    sendAJAXCommand("mysql.php",{action: "getPatterns"}, function(data)
+    {
+        for ( var i = 0; i < data.result.length; i++ )
+        {
+            $(".patterns").each(function(){ $(this).append("<option value='" + data.result[i][3] + "'>" + data.result[i][0] + "</option>")});
+        }
+    }, true);
 }
 
 function getDenySites() // получаем список запрещенных сайтов из бд
@@ -236,30 +236,28 @@ function getDenySites() // получаем список запрещенных 
             "</thead></table>");
 	$("#denySites").append("<tbody>");
 
-	$.post("mysql.php", { action: "getDenySites" }, function(data)
-			{ 	
-				for ( var i = 0; i < data.result.length; i++ )
-				{
-					$("#denySites").append("" +
-                        "<tr>" +
-							"<td>" +
-							    "<input type='checkbox' />" +
-							"</td>" +
-							"<td>" + data.result[i] + "</td>" +
-                        "</tr>");
-				}
+    sendAJAXCommand("mysql.php",{action: "getDenySites"}, function(data){
+        for ( var i = 0; i < data.result.length; i++ )
+        {
+            $("#denySites").append("" +
+                "<tr>" +
+                "<td>" +
+                "<input type='checkbox' />" +
+                "</td>" +
+                "<td>" + data.result[i] + "</td>" +
+                "</tr>");
+        }
 
-				$("#denySites").append("</tbody>");
-               applyStyleForTable($("#denySites"));
+        $("#denySites").append("</tbody>");
+        applyStyleForTable($("#denySites"));
 
-				$("#panel").append("" +
-						"<button onclick='selectAll()'>Выбрать все</button>" +
-						"<button onclick='cleanSelectAll()'>Снять выбор со всех</button>" +
-						"<button>Изменить</button>" +
-						"<button onclick='deleteDenySite()'>Удалить</button>" +
-						"<button onclick='showFormCreateDenySite()'>Создать</button>");
-				
-			}, "json");
+        $("#panel").append("" +
+            "<button onclick='selectAll()'>Выбрать все</button>" +
+            "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>" +
+            "<button>Изменить</button>" +
+            "<button onclick='deleteDenySite()'>Удалить</button>" +
+            "<button onclick='showFormCreateDenySite()'>Создать</button>");
+    }, true);
 }
 
 function tryPatternToUser() //при клике по шаблону из выпадающего списка заполняем поля пользователя данными шаблона
@@ -304,21 +302,19 @@ function createPattern() //запрос на сервер с целью созд
 	
 	if ( name != "" && traffic != "" && access != "" )
 	{
-		$.post("mysql.php", { action: "createPattern", name: name, traffic: traffic, access: access }, function(data)
-				{
-					if( data.result == "ok" )
-					{
-						getPatterns();
-					}
-					else
-					{
-						$("#main").empty();
-						$("#panel").empty();
-						
-						$("#main").append("<div>Вы не заполнили или несколько полей.</div>" + data.name + " " + data.traffic + " " + data.access);
-					}
-				
-				}, "json");
+        sendAJAXCommand("mysql.php",{action: "createPattern", name: name, traffic: traffic, access: access}, function(data){
+            if( data.result == "ok" )
+            {
+                getPatterns();
+            }
+            else
+            {
+                $("#main").empty();
+                $("#panel").empty();
+
+                $("#main").append("<div>Вы не заполнили или несколько полей.</div>" + data.name + " " + data.traffic + " " + data.access);
+            }
+        }, true);
 	}
 	else
 	{
@@ -340,7 +336,8 @@ function deletePattern() //запрос на сервер с целью удал
 					checkedPatterns.push( $("input")[i].parentNode.parentNode.children[1].innerHTML );
 				}
 		}
-	$.post("mysql.php", { action: "deletePattern", patterns: checkedPatterns }, function(data){ getPatterns() }, "json");
+
+    sendAJAXCommand("mysql.php",{action: "deletePattern", patterns: checkedPatterns}, getPatterns);
 
 }
 
@@ -469,7 +466,7 @@ function applyChangesToUsers() //применение изменений пол�
 		}
 	if ( changes.length > 0 )
 		{
-			$.post("mysql.php", { action: "applyChangesToUsers", changes: changes }, function(data){ getMysqlUsers() }, "json");
+            sendAJAXCommand("mysql.php",{action: "applyChangesToUsers", changes: changes}, getMysqlUsers);
 		}
 }
 
@@ -488,7 +485,7 @@ function appyPatternToUsers() //применение шаблона сразу �
 		}
 	if ( changes.length > 0 )
 	{
-		$.post("mysql.php", { action: "applyChangesToUsers", changes: changes }, function(data){ getMysqlUsers() }, "json");
+        sendAJAXCommand("mysql.php",{action: "applyChangesToUsers", changes: changes}, getMysqlUsers);
 	}
 }
 
@@ -504,29 +501,10 @@ function applyChangesToPatterns( currentPatternNames )
 		}
 	if ( changes.length > 0 )
 		{
-			$.post("mysql.php",
-                { action: "applyChangesToPatterns", changes: changes },
-                function(data)
-                {
-                    if(data.result == "ok")
-                    {
-                        applyChangesPatternToMysqlUsers(currentPatternNames);
-                        getPatterns();
-
-                    } }, "json");
+            sendAJAXCommand("mysql.php",{action: "applyChangesToPatterns", changes: changes}, function(){
+                getPatterns();
+            })
 		}
-}
-
-function applyChangesPatternToMysqlUsers(currentPatternNames)
-{
-    $.post("mysql.php",
-        {
-            action: "updateUsersByPattern",
-            patternNames: currentPatternNames
-        }, function(data)
-        {
-            alert("Все пользователи данного шаблона были успешно обновлены.")
-        }, "json");
 }
 
 function showFormCreateDenySite()
@@ -554,8 +532,7 @@ function createDenySite()
 	{
 		url.push( $("input")[i].value );
 	}
-	
-	$.post("mysql.php", { action: "createDenySite", url: url }, function(data){ getDenySites() }, "json");
+    sendAJAXCommand("mysql.php",{action: "createDenySite", url: url}, getDenySites);
 }
 
 function deleteDenySite()
@@ -569,7 +546,7 @@ function deleteDenySite()
 			checked.push( $("input")[i].parentNode.parentNode.children[1].innerHTML );
 		}
 	}
-	$.post("mysql.php", { action: "deleteDenySite", url: checked }, function(data){ getDenySites() }, "json");
+    sendAJAXCommand("mysql.php",{action: "deleteDenySite", url: checked}, getDenySites);
 }
 
 function selectAll()
@@ -594,7 +571,8 @@ function applyStyleForTable(table) {
         "scrollY":        "500px",
         "scrollCollapse": true,
         "paging":         false,
-        "language": {"url": "/sldap/DataTables-1.10.0/russian.lang"}
+        "language": {"url": "/sldap/DataTables-1.10.0/russian.lang"},
+        "bRetrieve": true
     } );
 }
 
@@ -634,34 +612,27 @@ function getTopList(type, count, fromDate, toDate)
 
     $("#main").append("<div id='loading'>Подождите, идет загрузка...</div>");
 
-
-    $.post("mysql.php", { action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate }, function(data)
-    {
+    sendAJAXCommand("mysql.php",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate}, function(data){
         $("#loading").hide();
         $("#main").append("<table id='topStats'></table>");
         $("#topStats").append("" +
-                "<thead>" +
-                "<tr>" +
-                "<td>Траффик в Мбайтах</td>" +
-                "<td>"+header+"</td>" +
-                "</tr>" +
-                "</thead><tbody>");
+            "<thead>" +
+            "<tr>" +
+            "<td>Траффик в Мбайтах</td>" +
+            "<td>"+header+"</td>" +
+            "</tr>" +
+            "</thead><tbody>");
 
         for( var i = 0; i < data.data.length; i++ )
         {
             $("#topStats").append("" +
                 "<tr>" +
-                    "<td>" + (data.data[i][0]/1048576).toFixed(3) + "</td>" +
-                    "<td>"+data.data[i][1]+"</td>" +
+                "<td>" + (data.data[i][0]/1048576).toFixed(3) + "</td>" +
+                "<td>"+data.data[i][1]+"</td>" +
                 "</tr>"
             );
         }
-
-        $("#topStats").append("</tbody>");
-
-        applyStyleForTable( $("#topStats") );
-
-    }, "json");
+    }, true);
 }
 
 function showPreferences()
@@ -678,8 +649,7 @@ function showAdmins()
     $("#main").empty();
     $("#panel").empty();
 
-    $.post("mysql.php", { action: "showAdmins" }, function(data)
-    {
+    sendAJAXCommand("mysql.php",{action: "showAdmins"}, function(data){
         $("#main").append("<table id='admins'></table>");
         $("#admins").append("" +
             "<thead>" +
@@ -703,7 +673,7 @@ function showAdmins()
 
         $("#admins").append("</tbody>");
         applyStyleForTable( $("#admins") );
-    },"json");
+    }, true);
 
     $("#panel").append("<button onclick='showFormCreateAdmin()'>Создать</button><button onclick='doWithAdmins(\"edit\")'>Изменить</button><button onclick='doWithAdmins(\"delete\")'>Удалить</button>");
 
@@ -763,7 +733,6 @@ function showEditAdmins( checkedAdmins )
 
     checkedAdmins.forEach( function( admin )
     {
-        console.log( admin );
         $("#editAdmins").append("" +
             "<tr>" +
             "<td><input id="+admin[0]+" type='text' value="+admin[1]+" /></td>" +
@@ -781,30 +750,23 @@ function showEditAdmins( checkedAdmins )
 
 function getPermissionList()
 {
-    $.post("mysql.php", { action: "getPermissions" }, function(data)
-    {
+    sendAJAXCommand("mysql.php",{action: "getPermissions"}, function(data){
         for( var i = 0; i < data.data.length; i++ )
         {
             $(".permissions").append("<option value=" + data.data[i][0] + ">" + data.data[i][1] + "</option>");
         }
-    },"json");
+    }, true);
 }
 
 function createAdminAccount()
 {
-    $.post("mysql.php", { action: "createAdminAccount", login: $("#login").val(), password: $("#password").val(), retype_password: $("#retype_password").val(), permission_id: $(".permissions").val() }, function(data)
-    {
-        if ( data.result == "ok" )
-        {
-            alert("Учетная запись успешно создана");
-            showAdmins();
-        }
-        else if( data.result == "error" )
-        {
-            alert( data.message );
-            showAdmins();
-        }
-    },"json");
+    sendAJAXCommand("mysql.php", {
+        action: "createAdminAccount",
+        login: $("#login").val(),
+        password: $("#password").val(),
+        retype_password: $("#retype_password").val(),
+        permission_id: $(".permissions").val()
+    }, showAdmins);
 }
 
 function applyChangesToAdmin()
@@ -813,29 +775,17 @@ function applyChangesToAdmin()
 
     for( var i = 1; i < $("tr").length; i++ )
     {
-        var id = $("tr")[i].children[0].children[0].id;
-        var login = $("tr")[i].children[0].children[0].value;
-        var password = $("tr")[i].children[1].children[0].value;
-        var retype_password = $("tr")[i].children[2].children[0].value;
-        var permission_id = $("tr")[i].children[3].children[0].value;
+        var id = $($("tr").get(i)).find("input:first").attr("id");
+        var login = $($("tr").get(i)).find("input:first").val();
+        var password = $($("tr").get(i)).find("input").get(1).value;
+        var retype_password = $($("tr").get(i)).find("input").get(2).value;
+        var permission_id = $("select.permissions").val();
 
         changes.push([id,login, password, retype_password, permission_id]);
     }
     if ( changes.length > 0 )
     {
-        $.post("mysql.php", { action: "applyChangesToAdmin", changes: changes }, function(data)
-        {
-            if ( data.result == "ok" )
-            {
-                alert("Обновление успешно!");
-                showAdmins();
-            }
-            else if( data.result == "error" )
-            {
-                alert( data.message );
-                showAdmins();
-            }
-        },"json");
+        sendAJAXCommand("mysql.php",{action: "applyChangesToAdmin", changes: changes}, showAdmins )
     }
 }
 
@@ -902,8 +852,8 @@ function getPermissionsById(id)
 {
     $("input[type=checkbox]:checked").each(function(index, checkbox){ $(checkbox).prop("checked",false)});
 
-    $.post("mysql.php", { action: "getPermissionsById", id: id }, function( data )
-    {
+    sendAJAXCommand("mysql.php",{action: "getPermissionsById", id: id }, function(data){
+
         var data = data.data;
 
         for ( var key in data)
@@ -913,12 +863,14 @@ function getPermissionsById(id)
                 $("#" + key).prop("checked", true);
             }
         }
-    },"json");
+    }, true);
 }
 
 function applyChangesToPermissions()
 {
-    var id = $(".permissions").val();
+    var id = $(".permissions:visible").val();
+    id = id == undefined ? "" : id;
+
     var permissions = new Array();
     var name = $("#patternName").val();
 
@@ -926,13 +878,29 @@ function applyChangesToPermissions()
         permissions.push( [$(row).attr("id"), $(row).prop("checked")] );
     });
 
-    $.post("mysql.php", { action: "applyChangesToPermissions", id: id, name: name, permissions: permissions }, function( data )
+    sendAJAXCommand("mysql.php",{action: "applyChangesToPermissions", id: id, name: name, permissions: permissions}, showPermissionPatterns );
+}
+
+function sendAJAXCommand(url, params, callbackFunction, needData)
+{
+    $.post(url, params, function( data )
     {
-        alert( data.message );
+        if ( data.message && data.message.length > 0 )
+        {
+            alert( data.message );
+        }
 
         if( data.result != "error" )
         {
-            showPermissionPatterns();
+            if( needData )
+            {
+                callbackFunction(data);
+            }
+            else
+            {
+                callbackFunction();
+            }
+
         }
     },"json");
 }
