@@ -604,15 +604,15 @@ function showStatistic()
         "<div><b>ВНИМАНИЕ!</b> Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
     $("#main").append("" +
         "Дата с <input id='fromDate' /> по <input id='toDate' />" +
-        "<a href='#'><div onclick=\"getTop('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div></a>" +
-        "<a href='#'><div onclick=\"getTop('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div></a>"
+        "<a href='#'><div onclick=\"getTopList('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div></a>" +
+        "<a href='#'><div onclick=\"getTopList('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div></a>"
     );
 
     $("#fromDate").datepicker({format:"dd.mm.yyyy"});
     $("#toDate").datepicker({format:"dd.mm.yyyy"});
 }
 
-function getTop(type, count, fromDate, toDate)
+function getTopList(type, count, fromDate, toDate)
 {
     var header = "";
     if ( type === "login" )
