@@ -321,6 +321,23 @@ include 'install/checkconf.php';
 		
 		echo json_encode( array("result" => "ok", "message" => "Запрещенный сайт(ы) успешно удален(ы)."  ) );
     }
+    else if( $_POST["action"] == "editDenySite")
+    {
+        if ( !checkPermissions($mysqli, "editDenySites") )
+        {
+            echo json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            return;
+        }
+
+        $changes = $_POST["changes"];
+
+        foreach ( $changes as $change)
+        {
+            applyChangesToDenySites($mysqli, $change[1], $change[0]);
+        }
+        echo json_encode( array( "result" => "ok", "message" => "Успешное обновление запрещенного(ых) сайта(ов)." ));
+
+    }
     else if( $_POST["action"] == "getTop" )
     {
         $type = $_POST["type"];
@@ -531,6 +548,13 @@ include 'install/checkconf.php';
         $statement->execute() or die( "не удалось выполнить обновление учетной(учетных) записи(записей) администратора ".$statement->error );
     }
 
+    function applyChangesToDenySites($mysqli, $url, $id)
+    {
+        $statement = $mysqli->prepare("UPDATE denySites SET url=? WHERE id=?") or die ( "не удалось подготовить запрос: ".$mysqli->error );
+        $statement->bind_param('si', $url, $id);
+        $statement->execute() or die( "не удалось выполнить обновление запрещенного(ых) сайта(ов) ".$statement->error );
+    }
+
     function checkPermissions($mysqli, $permission)
     {
         if ( $permission == "addUsers" or
@@ -540,6 +564,7 @@ include 'install/checkconf.php';
             $permission == "editPatterns" or
             $permission == "deletePatterns" or
             $permission == "addDenySites" or
+            $permission == "editDenySites" or
             $permission == "deleteDenySites" or
             $permission == "createAdmins" or
             $permission == "editAdmins" or

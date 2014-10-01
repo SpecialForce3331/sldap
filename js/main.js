@@ -59,7 +59,7 @@ function getMysqlUsers() //получаем пользователей из БД
             "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>");
         $("#panel").append("" +
             "<button onclick='doWithUsers(\"cleanTraffic\")'>Обнулить траффик</button>" +
-            "<button onclick='showEditUsers()'>Изменить</button>" +
+            //"<button onclick='showEditUsers()'>Изменить</button>" +
             "<button onclick='doWithUsers(\"deleteUsers\")'>Удалить</button>");
         $("#panel").append("<br>" +
             "<button onclick='appyPatternToUsers()'>Применить шаблон на выбранных пользователей: </button>" +
@@ -254,7 +254,7 @@ function getDenySites() // получаем список запрещенных 
         $("#panel").append("" +
             "<button onclick='selectAll()'>Выбрать все</button>" +
             "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>" +
-            "<button>Изменить</button>" +
+            "<button onclick='showEditDenySite()'>Изменить</button>" +
             "<button onclick='deleteDenySite()'>Удалить</button>" +
             "<button onclick='showFormCreateDenySite()'>Создать</button>");
     }, true);
@@ -344,24 +344,24 @@ function deletePattern() //запрос на сервер с целью удал
 function showEditUsers() //отображаем форму для редактирования атрибутов пользователей
 {
 	var checkedUsers = new Array();
-	
+
 	for ( var i = 0; i < $("input").length; i++ ) //выбираем отмеченных пользователей
 		{
 			if ( $("input")[i].checked == true )
 				{
-					checkedUsers.push( new Array( $("input")[i].parentNode.parentNode.children[1].innerHTML, 
-													$("input")[i].parentNode.parentNode.children[2].innerHTML, 
-													$("input")[i].parentNode.parentNode.children[4].innerHTML, 
-													$("input")[i].parentNode.parentNode.children[5].innerHTML, 
+					checkedUsers.push( new Array( $("input")[i].parentNode.parentNode.children[1].innerHTML,
+													$("input")[i].parentNode.parentNode.children[2].innerHTML,
+													$("input")[i].parentNode.parentNode.children[4].innerHTML,
+													$("input")[i].parentNode.parentNode.children[5].innerHTML,
 													$("input")[i].parentNode.parentNode.children[6].innerHTML ) );
 				}
 		}
-	
+
 	if ( checkedUsers.length > 0 )
 		{
 			$("#main").empty();
 			$("#panel").empty();
-			
+
 			$("#main").append("<table id='editUsers'></table>");
 			$("#editUsers").append("" +
 					"<thead><tr>" +
@@ -370,8 +370,8 @@ function showEditUsers() //отображаем форму для редакти
 					"<td>Разрешенный траффик</td>" +
 					"<td>Шаблон</td>" +
 					"<td>Доступ на запрещенные сайты</td></thead><tbody>");
-			
-			
+
+
 			for ( var i = 0; i < checkedUsers.length; i++ )
 				{
 					$("#editUsers").append("<tr>" +
@@ -390,7 +390,7 @@ function showEditUsers() //отображаем форму для редакти
 			$("#panel").append("" +
 					"<button onclick='applyChangesToUsers()'>Применить изменения</button>" +
 					"<button onclick='getMysqlUsers()'>Отмена</button>");
-			
+
 			getPatternsForList(); //получаем шаблоны и наполняем ими выпадающий список
 		}
 }
@@ -546,7 +546,14 @@ function showEditDenySite()
     $("#main").empty();
     $("#panel").empty();
 
+    $("#main").append("<h3>Адрес блокируемого сайта</h3>");
 
+    checkedSites.forEach( function(site)
+    {
+        $("#main").append("<div id="+ site[0] +"><input type='text' value='"+ site[1] +"' /></div>");
+    });
+
+    $("#panel").append("<button onclick='applyChangesToDenySites()'>Применить</button><button onclick='getDenySites()'>Отмена</button>");
 }
 
 function deleteDenySite()
@@ -561,6 +568,17 @@ function deleteDenySite()
 		}
 	}
     sendAJAXCommand("mysql.php",{action: "deleteDenySite", url: checked}, getDenySites);
+}
+
+function applyChangesToDenySites()
+{
+    var changes = [];
+
+    $("#main > div").each(function(){
+       changes.push( [$(this).attr("id"), $(this).find("input").val()] );
+    });
+
+    sendAJAXCommand("mysql.php", {action: "editDenySite", changes: changes}, getDenySites );
 }
 
 function selectAll()
@@ -599,8 +617,8 @@ function showStatistic()
         "<div><b>ВНИМАНИЕ!</b> Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
     $("#main").append("" +
         "Дата с <input id='fromDate' /> по <input id='toDate' />" +
-        "<a href='#'><div onclick=\"getTopList('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div></a>" +
-        "<a href='#'><div onclick=\"getTopList('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div></a>"
+        "<div class='btn-blue' onclick=\"getTopList('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div>" +
+        "<div class='btn-blue' onclick=\"getTopList('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div>"
     );
 
     $.datepicker.formatDate( "dd.mm.yy", new Date());
@@ -654,8 +672,8 @@ function showPreferences()
     $("#main").empty();
     $("#panel").empty();
 
-    $("#main").append("<div onclick='showAdmins()'>Управление учетными записями администраторов</div>");
-    $("#main").append("<div onclick='showPermissionPatterns()'>Управление шаблонами прав</div>");
+    $("#main").append("<div class='btn-blue' onclick='showAdmins()'>Управление учетными записями администраторов</div>");
+    $("#main").append("<div class='btn-blue' onclick='showPermissionPatterns()'>Управление шаблонами прав</div>");
 }
 
 function showAdmins()
@@ -835,6 +853,7 @@ function showPermissionPatterns()
     $("#permissionList").append("<li><label>Запрещенные сайты</label>" +
         "<ul>" +
             "<li><label><input id='addDenySites' type='checkbox'/>Добавление сайтов</label></li>" +
+            "<li><label><input id='editDenySites' type='checkbox'/>Редактирование сайтов</label></li>" +
             "<li><label><input id='deleteDenySites' type='checkbox'/>Удаление сайтов</label></li>" +
         "</ul>" +
     "</li>");

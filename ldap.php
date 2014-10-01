@@ -27,7 +27,7 @@ if ( $_POST["action"] == "getLdapUsers" )
 			
 			$filter ="(&(!(objectclass=computer))(!(objectclass=group))(objectCategory=person)(objectclass=user)(cn=*)";
 			
-			if ( count( $_POST["existUsers"] ) > 0 )
+			if ( isset($_POST["existUsers"]) && count( $_POST["existUsers"] ) > 0 )
 			{
 				$existUsers = $_POST["existUsers"];
 					

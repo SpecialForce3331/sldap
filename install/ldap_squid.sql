@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `editPatterns` TINYINT NOT NULL ,
   `deletePatterns` TINYINT NOT NULL ,
   `addDenySites` TINYINT NOT NULL ,
+  `editDenySites` TINYINT NOT NULL ,
   `deleteDenySites` TINYINT NOT NULL ,
   `createAdmins` TINYINT NOT NULL ,
   `editAdmins` TINYINT NOT NULL ,
@@ -114,6 +115,9 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `editPermissions` TINYINT NOT NULL ,
   `deletePermissions` TINYINT NOT NULL ,
   PRIMARY KEY (`id`) );
+
+INSERT INTO `permissions` (`id`, `name`, `addUsers`, `editUsers`, `deleteUsers`, `createPatterns`, `editPatterns`, `deletePatterns`, `addDenySites`, `editDenySites`, `deleteDenySites`, `createAdmins`, `editAdmins`, `deleteAdmins`, `createPermissions`, `editPermissions`, `deletePermissions`) VALUES
+(1, 'full_access', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
 CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT NOT NULL AUTO_INCREMENT ,
@@ -127,3 +131,5 @@ CREATE TABLE IF NOT EXISTS `admins` (
   REFERENCES `ldap_squid`.`permissions` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+
+INSERT INTO `ldap_squid`.`admins` (`id`, `login`, `password`, `permission_id`) VALUES (NULL, 'root', 'qwerty', '1');

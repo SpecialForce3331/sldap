@@ -25,4 +25,17 @@ ul {
     list-style-type: none;
 }
 
+.btn-blue {
+    background: #f2f5f7;
+    margin: 3px;
+    padding: 0.4em;
+    font-size: 1.0em;
+    height: 20px;
+    cursor: pointer;
+}
+
+.btn-blue:hover {
+    color: white;
+    background: #3baae3;
+}
 
