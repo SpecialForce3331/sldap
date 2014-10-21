@@ -39,3 +39,13 @@ ul {
     background: #3baae3;
 }
 
+.selectable-row:hover {
+    cursor: pointer;
+    background: #B3D4FC;
+}
+
+.selectable-row-selected {
+    cursor: pointer;
+    background: #3baae3 !important;
+    color: white;
+}

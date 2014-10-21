@@ -608,28 +608,36 @@ function applyStyleForTable(table) {
     } );
 }
 
+var maxStatisticRecords = 15;
+
 function showStatistic()
 {
+
     $("#main").empty();
     $("#panel").empty();
-    $("#main").append("<div>Укажите дату и выберите тип статистики (по пользователям или сайтам).</div>" +
+    $("#main").append("<div>Укажите дату и выберите тип статистики.</div>" +
         "<div>Если вы не укажите одну из дат, запрос статистики будет осуществлен за сегодняшний день.</div>" +
         "<div><b>ВНИМАНИЕ!</b> Запрос статистики за большой период может вызвать дополнительную нагрузку на сервер, не ставьте большой промежуток без необходимости.</div>");
     $("#main").append("" +
         "Дата с <input id='fromDate' /> по <input id='toDate' />" +
-        "<div class='btn-blue' onclick=\"getTopList('login', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div>" +
-        "<div class='btn-blue' onclick=\"getTopList('site', 15, $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div>"
+        "<div class='btn-blue' onclick=\"getTopList('login', " + maxStatisticRecords + ", $('#fromDate').val(), $('#toDate').val() )\">Топ 15 пользователей</div>" +
+        "<div class='btn-blue' onclick=\"getTopList('site', " + maxStatisticRecords + ", $('#fromDate').val(), $('#toDate').val() )\">Топ 15 сайтов</div>" +
+        "<div class='btn-blue' onclick=\"selectUserFromPopupUserList()\">Выбрать пользователя и тип статистики</div>" +
+        "<div style='display: none;' id='userList'></div>"
     );
 
     $.datepicker.formatDate( "dd.mm.yy", new Date());
 
     $("#fromDate").datepicker();
     $("#toDate").datepicker();
+
+
 }
 
-function getTopList(type, count, fromDate, toDate)
+function getTopList(type, count, fromDate, toDate, login)
 {
     var header = "";
+
     if ( type === "login" )
     {
         header = "Пользователи";
@@ -644,7 +652,8 @@ function getTopList(type, count, fromDate, toDate)
 
     $("#main").append("<div id='loading'>Подождите, идет загрузка...</div>");
 
-    sendAJAXCommand("mysql.php",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate}, function(data){
+    sendAJAXCommand("mysql.php",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate, login: login}, function(data)
+    {
         $("#loading").hide();
         $("#main").append("<table id='topStats'></table>");
         $("#topStats").append("" +
@@ -665,6 +674,64 @@ function getTopList(type, count, fromDate, toDate)
             );
         }
     }, true);
+}
+
+function selectUserFromPopupUserList()
+{
+    sendAJAXCommand("mysql.php", {action: "getMysqlUsers"}, function (data) {
+        $("#userList").append("<table id='user_table'>" +
+        "<thead><tr>" +
+        "<td>ФИО</td>" +
+        "<td>Логин</td>" +
+        "</tr></thead><tbody>" +
+        "</table>");
+
+        for (var i = 0; i < data.result.length; i++) {
+            $("#user_table").append(
+                "<tr class='selectable-row' onclick=\"selectUserPopup(this, \'" + data.result[i][0] + "\')\">" +
+                "<td>" + data.result[i][1] + "</td>" +
+                "<td>" + data.result[i][0] + "</td>" +
+                "</tr>");
+        }
+
+        $("#user_table").append("</tbody>");
+
+        applyStyleForTable($("#user_table"));
+
+        $("#userList").dialog({
+            width: 500,
+            buttons: [
+                {
+                    text: "OK",
+                    click: function () {
+                        var login = $("tr.selectable-row-selected").find("td").last().html();
+                        $(this).dialog("destroy");
+                        getTopList('site', maxStatisticRecords, $('#fromDate').val(), $('#toDate').val(), login);
+                    }
+                },
+                {
+                    text: "Отмена",
+                    click: function () {
+                        $(this).dialog("destroy");
+                    }
+                }
+            ]
+        });
+
+    }, true);
+}
+
+function selectUserPopup(object)
+{
+    $(object).parent().find("tr").each(function()
+    {
+        if ( $(this).hasClass('selectable-row-selected') )
+        {
+            toggleCssClass($(this), 'selectable-row', 'selectable-row-selected');
+        }
+    });
+
+    toggleCssClass($(object), 'selectable-row', 'selectable-row-selected');
 }
 
 function showPreferences()
@@ -936,4 +1003,14 @@ function sendAJAXCommand(url, params, callbackFunction, needData)
 
         }
     },"json");
+}
+
+//Функция заменяет существующий класс новым, порядок передачи классов значения не имеет.
+function toggleCssClass(object, class1, class2)
+{
+    toAddClass = $(object).hasClass(class1) ? class2 : class1;
+    toRemoveClass = toAddClass === class1 ? class2 : class1;
+
+    $(object).removeClass(toRemoveClass);
+    $(object).addClass(toAddClass);
 }

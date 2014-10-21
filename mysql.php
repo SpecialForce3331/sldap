@@ -344,7 +344,8 @@ include 'install/checkconf.php';
         $count = $_POST["count"];
         $fromDate = $_POST["fromDate"];
         $toDate = $_POST["toDate"];
-        $result = getTop( $mysqli, $type, $count, $fromDate, $toDate );
+        $login = empty($_POST["login"]) ? "" : $_POST["login"];
+        $result = getTop( $mysqli, $type, $count, $fromDate, $toDate, $login );
         echo json_encode( array("result" => "ok", "data" => $result) );
     }
     else if( $_POST["action"] == "showAdmins" )
@@ -502,18 +503,24 @@ include 'install/checkconf.php';
         return $patternsData;
     }
 
-    function getTop($mysqli, $type, $count, $fromDate, $toDate)
+    function getTop($mysqli, $type, $count, $fromDate, $toDate, $login)
     {
+        $whereLogin = "";
+        if ( !empty($login) )
+        {
+            $whereLogin = "and login = '$login'";
+        }
+
         if( !empty($fromDate) && !empty($toDate) )
         {
-            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE dateTime BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('$fromDate', '%d.%m.%Y')) and UNIX_TIMESTAMP(STR_TO_DATE('$toDate', '%d.%m.%Y')) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE dateTime BETWEEN UNIX_TIMESTAMP(STR_TO_DATE('$fromDate', '%d.%m.%Y')) and UNIX_TIMESTAMP(STR_TO_DATE('$toDate', '%d.%m.%Y')) $whereLogin GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
         else
         {
-            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE DATE(FROM_UNIXTIME(dateTime))=DATE(NOW()) GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE DATE(FROM_UNIXTIME(dateTime))=DATE(NOW()) $whereLogin GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
 
-        $result = $mysqli->query( $query ) or die( "select error" );
+        $result = $mysqli->query( $query ) or die( "select error\n".$mysqli->error );
         $patternsData = $result->fetch_all( MYSQLI_NUM );
         return $patternsData;
     }
