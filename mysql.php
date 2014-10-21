@@ -517,7 +517,7 @@ include 'install/checkconf.php';
         }
         else
         {
-            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE DATE(FROM_UNIXTIME(dateTime))=DATE(NOW()) $whereLogin GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
+            $query = "SELECT SUM(bytes) as bytes, $type FROM usersTraffic WHERE ( dateTime BETWEEN UNIX_TIMESTAMP(CURDATE() - interval 1 day) AND UNIX_TIMESTAMP(CURDATE() + interval 1 day) ) $whereLogin GROUP BY $type ORDER by SUM(bytes) desc LIMIT 0,$count";
         }
 
         $result = $mysqli->query( $query ) or die( "select error\n".$mysqli->error );
