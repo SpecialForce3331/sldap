@@ -673,6 +673,9 @@ function getTopList(type, count, fromDate, toDate, login)
                 "</tr>"
             );
         }
+
+        $("#topStats").append("</tbody>");
+        applyStyleForTable($("#topStats"));
     }, true);
 }
 
