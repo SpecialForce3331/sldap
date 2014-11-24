@@ -42,7 +42,7 @@
 	{
 		if ( $buffer != false )
 		{
-			$result = explode( ":", $buffer );
+			$result = explode( " : ", $buffer );
 
 			if( count( $result ) >= 2  )
 			{
