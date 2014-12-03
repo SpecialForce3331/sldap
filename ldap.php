@@ -1,15 +1,11 @@
 <?php 
 
-// $server = "192.168.2.210";
-// $login = "squid@akvnzm.ru";
-// $password = "123456";
 putenv('LDAPTLS_REQCERT=never');
 include 'install/checkconf.php';
 
 $server = "ldaps://".$LdapIp."/";
 $login = $LdapLogin;
 $password = $LdapPassword;
-//$domain = "OU=users,OU=УОМР,OU=БирскийТракт,OU=VPN,OU=offices,OU=Users,OU=Location of resources,DC=akvnzm,DC=ru";
 $domain = $LdapDomainContainer;
 
 $ldapConn = ldap_connect( $server );

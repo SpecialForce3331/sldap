@@ -8,10 +8,6 @@
     $password = "qwerty";
     $database = "ldap_squid";
 
-//    $server = $MysqlIp;
-//    $username = $MysqlLogin;
-//    $password = $MysqlPassword;
-//    $database = $MysqlDatabase;
 
     function getConnection($server, $username, $password, $database, $mysqli)
     {

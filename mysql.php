@@ -2,14 +2,6 @@
 
 include 'install/checkconf.php';
 
-//Работа с БД
-
-	//Данные для подключения к БД
-// 	$server = "localhost";
-// 	$username = "ldap_squid";
-// 	$password = "qwerty";
-// 	$database = "ldap_squid";
-
     session_start();
 
 	$server = $MysqlIp;
