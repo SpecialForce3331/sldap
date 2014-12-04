@@ -46,22 +46,19 @@ include 'install/checkconf.php';
         }
     }
 	else if ( $_POST["action"] == "getMysqlUsers" ) //получаем пользователей и инфу о них из БД
-	{
-		$result = $mysqli->query( "SELECT users.login,users.name,users.trafficForDay,patterns.traffic,patterns.name,patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id ORDER BY users.name" ) or die("can not get users ".$mysqli->error );;
-		
-		if ($mysqli->connect_errno)
-		{
-			echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;			
-		}
-		else
-		{
-            $data = $result->fetch_all( MYSQLI_NUM );
+    {
+        $result = $mysqli->query("SELECT users.login,users.name,users.trafficForDay,patterns.traffic,patterns.name,patterns.access FROM users LEFT JOIN patterns ON users.pattern_id = patterns.id ORDER BY users.name") or die("can not get users " . $mysqli->error);;
 
-			$answer = array("result" => $data);
-			echo json_encode( $answer );
-			$result->free();
-		}
-	}
+        if ($mysqli->connect_errno) {
+            echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+        } else {
+            $data = $result->fetch_all(MYSQLI_NUM);
+
+            $answer = array("result" => $data);
+            echo json_encode($answer);
+            $result->free();
+        }
+    }
 	else if ( $_POST["action"] == "cleanTraffic" ) //очистка траффика пользователей
 	{
         if ( !checkPermissions($mysqli, "editUsers") )
@@ -485,6 +482,19 @@ include 'install/checkconf.php';
 		$data = array("result" => "error", "message" => "Запрошенного действия не существует." );
 		echo json_encode( $data );
 	}
+
+    function getExistUsers($mysqli)
+    {
+        $result = $mysqli->query("SELECT users.login FROM users") or die("can not get exist users " . $mysqli->error);;
+
+        if ($mysqli->connect_errno) {
+            echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+        } else {
+            $data = $result->fetch_all(MYSQLI_NUM);
+            $result->free();
+            return $data;
+        }
+    }
 
     function getPatternDetailsByName($mysqli, $name)
     {

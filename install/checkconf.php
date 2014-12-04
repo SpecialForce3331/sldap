@@ -6,6 +6,7 @@
 	$LdapPassword;
 	$LdapDomainContainer;
 	$LdapDomain;
+    $LdapGroup;
 
     $DomainPrefix;
     $LocalNet;
@@ -69,6 +70,10 @@
 				{
 					$LdapDomain = trim( $value );
 				}
+                else if ( trim($key) === "LDAP_group_guid" )
+                {
+                    $LdapGroupGUID = trim( $value );
+                }
                 else if( trim($key) === "Domain_prefix" )
                 {
                     $DomainPrefix = trim( $value );

@@ -7,6 +7,7 @@ $server = "ldaps://".$LdapIp."/";
 $login = $LdapLogin;
 $password = $LdapPassword;
 $domain = $LdapDomainContainer;
+$groupGUID = $LdapGroupGUID;
 
 $ldapConn = ldap_connect( $server );
 ldap_set_option( $ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
@@ -15,14 +16,18 @@ ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
 if ( $_POST["action"] == "getLdapUsers" )
 {
 	if ( $ldapConn )
-	{		
+	{
 		$ldapBind = ldap_bind( $ldapConn, $login, $password );
-		
+        
+        $groupFilter = "(&(objectGUID=".$groupGUID."))";
+        $ldapSearch = ldap_search($ldapConn, $domain, $groupFilter, array("distinguishedName"));
+        $groupResult = ldap_get_entries( $ldapConn, $ldapSearch );
+        $group = $groupResult[0]["distinguishedname"][0];
+
+        $filter ="(&(memberof=".$group.")(cn=*)";
+
 		if ( $ldapBind )
-		{	
-			
-			$filter ="(&(!(objectclass=computer))(!(objectclass=group))(objectCategory=person)(objectclass=user)(cn=*)";
-			
+		{
 			if ( isset($_POST["existUsers"]) && count( $_POST["existUsers"] ) > 0 )
 			{
 				$existUsers = $_POST["existUsers"];
@@ -41,11 +46,11 @@ if ( $_POST["action"] == "getLdapUsers" )
 				
 				}
 			}
-			else
-			{
-				$filter ="(&(!(objectclass=computer))(!(objectclass=group))(objectCategory=person)(objectclass=user)(cn=*))";
-			}
-			
+            else
+            {
+                $filter = $filter.")";
+            }
+
 			$attribute =  array("samAccountName"); 
 
 			$ldapSearch = ldap_search($ldapConn, $domain, $filter, $attribute);
