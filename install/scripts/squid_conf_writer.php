@@ -37,17 +37,17 @@
             auth_param basic program /usr/lib/squid3/squid_ldap_auth -R -D '.$LdapLogin.' -w '.$LdapPassword.' -b "'.$LdapDomain.'" -f "sAMAccountName=%s" '.$LdapIp.'
             auth_param basic children 5 startup=5 idle=1
             auth_param basic realm Squid proxy-caching web server
-            auth_param basic credentialsttl 2 hours
+            auth_param basic credentialsttl 5 hours
 
             acl users proxy_auth REQUIRED
-            external_acl_type accessCheck ttl=0 %LOGIN %URI php -f '.$sldapDirectory.'/checkUser.php
+            external_acl_type accessCheck ttl=0 %LOGIN %URI python3.4 '.$sldapDirectory.'/helper.py
             acl allowUsers external accessCheck
 
             acl all src 0.0.0.0/0
 
             http_access allow allowUsers
             http_access deny all
-
+            deny_info http://'.$SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
             http_port 3128
 
             visible_hostname squid
