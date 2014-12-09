@@ -1,77 +1,104 @@
 <?php 
 
-putenv('LDAPTLS_REQCERT=never');
-include 'install/checkconf.php';
+    putenv('LDAPTLS_REQCERT=never');
 
-$server = "ldaps://".$LdapIp."/";
-$login = $LdapLogin;
-$password = $LdapPassword;
-$domain = $LdapDomainContainer;
-$groupGUID = $LdapGroupGUID;
+    class Ldap
+    {
+        private $server;
+        private $login;
+        private $password;
+        private $domain;
+        private $groupGUID;
+        private $ldapConn;
+        private $ldapBind;
 
-$ldapConn = ldap_connect( $server );
-ldap_set_option( $ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
-ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
+        function __construct($config)
+        {
+            $this->server = "ldaps://".$config->LdapIp."/";
+            $this->login = $config->LdapLogin;
+            $this->password = $config->LdapPassword;
+            $this->domain = $config->LdapDomain;
+            $this->groupGUID = $config->LdapGroupGUID;
 
-if ( $_POST["action"] == "getLdapUsers" )
-{
-	if ( $ldapConn )
-	{
-		$ldapBind = ldap_bind( $ldapConn, $login, $password );
+            $this->ldapConn = ldap_connect( $this->server );
+            ldap_set_option( $this->ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
+            ldap_set_option( $this->ldapConn, LDAP_OPT_REFERRALS, 0);
 
-        $groupFilter = "(&(objectGUID=".$groupGUID."))";
-        $ldapSearch = ldap_search($ldapConn, $domain, $groupFilter, array("distinguishedName"));
-        $groupResult = ldap_get_entries( $ldapConn, $ldapSearch );
-        $group = $groupResult[0]["distinguishedname"][0];
+            $this->ldapBind = ldap_bind( $this->ldapConn, $this->login, $this->password );
+        }
 
-        $filter ="(&(memberof=".$group.")(cn=*)";
+        public function getLdapUsers($existUsers)
+        {
+            $groupFilter = "(&(objectGUID=".$this->groupGUID."))";
+            $ldapSearch = ldap_search($this->ldapConn, $this->domain, $groupFilter, array("distinguishedName"));
+            $groupResult = ldap_get_entries( $this->ldapConn, $ldapSearch );
+            $group = $groupResult[0]["distinguishedname"][0];
 
-		if ( $ldapBind )
-		{
-			if ( isset($_POST["existUsers"]) && count( $_POST["existUsers"] ) > 0 )
-			{
-				$existUsers = $_POST["existUsers"];
-					
-				for ( $i = 0; $i < count($existUsers); $i++ )
-				{
-					if ( $i == ( count($existUsers) -1 ) )
-					{
-						$filter = $filter."(!(sAMAccountName=".$existUsers[$i][0]."))";
-						$filter = $filter.")";
-					}
-					else
-					{
-						$filter = $filter."(!(sAMAccountName=".$existUsers[$i][0]."))";
-					}
-				
-				}
-			}
+            $filter ="(&(memberof=".$group.")(cn=*)";
+
+            if ( $this->ldapBind )
+            {
+                if ( !empty($existUsers) && count( $existUsers ) > 0 )
+                {
+                    for ( $i = 0; $i < count($existUsers); $i++ )
+                    {
+                        if ( $i == ( count($existUsers) -1 ) )
+                        {
+                            $filter = $filter."(!(sAMAccountName=".$existUsers[$i][0]."))";
+                            $filter = $filter.")";
+                        }
+                        else
+                        {
+                            $filter = $filter."(!(sAMAccountName=".$existUsers[$i][0]."))";
+                        }
+
+                    }
+                }
+                else
+                {
+                    $filter = $filter.")";
+                }
+
+                $attribute =  array("samAccountName");
+
+                $ldapSearch = ldap_search($this->ldapConn, $this->domain, $filter, $attribute);
+                $result = ldap_get_entries( $this->ldapConn, $ldapSearch );
+
+                if ( $result != FALSE )
+                {
+                    return json_encode( array( "result" => $result ));
+                }
+                else
+                {
+                    return json_encode( array( "result" => $result ) );
+                }
+            }
+        }
+
+        public function ldapAuth($login, $password)
+        {
+            $ldapConn = ldap_connect( $this->server );
+            ldap_set_option( $ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
+            ldap_set_option( $ldapConn, LDAP_OPT_REFERRALS, 0);
+
+            $ldapBind = ldap_bind( $this->ldapConn, $login, $password ) or die("can't auth with: ".$this->ldapConn." ".$login." ".$password);
+
+            if ( $ldapBind )
+            {
+                ldap_close($ldapConn);
+                return true;
+            }
             else
             {
-                $filter = $filter.")";
+                ldap_close($ldapConn);
+                return false;
             }
+        }
 
-			$attribute =  array("samAccountName"); 
-
-			$ldapSearch = ldap_search($ldapConn, $domain, $filter, $attribute);
-			$result = ldap_get_entries( $ldapConn, $ldapSearch );
-	
-			if ( $result != FALSE )
-			{
-				echo json_encode( array( "result" => $result ));
-			}
-			else
-			{
-				echo json_encode( array( "result" => $result ) );
-			}
-		}
-	
-		ldap_unbind($ldapConn);
-	}
-	else
-	{
-		echo json_encode( array( "result" => "false" ) );
-	}
-}
+        function __destruct()
+        {
+            ldap_close($this->ldapConn);
+        }
+    }
 
 ?>

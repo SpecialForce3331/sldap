@@ -1,14 +1,13 @@
 <?php 
 
-    class CheckConf
+    class Config
     {
         //создаем необходимые переменные
         public $LdapIp;
         public $LdapLogin;
         public $LdapPassword;
-        public $LdapDomainContainer;
-        public $LdapDomain;
         public $LdapGroupGUID;
+        public $LdapDomain;
 
         public $DomainPrefix;
         public $LocalNet;
@@ -24,11 +23,8 @@
         public $SquidMode;
         public $SquidLogfile;
 
-        private $parsedVars;
-
         public function __construct()
         {
-            $this->$parsedVars = [];
             //в зависимости от директории из которой инклудят этот файл, определяем директорию.
             $path = explode( "/", getcwd() );
 
@@ -58,100 +54,94 @@
 
                         if( trim($key) === "LDAP_ip" )
                         {
-                            $this->$LdapIp = trim($value);
-                            array_push($this->$LdapIp, $LdapIp);
+                            $this->LdapIp = trim($value);
                         }
                         else if( trim($key) === "LDAP_login" )
                         {
-                            $this->$LdapLogin = trim($value);
-                            array_push($this->$LdapLogin, $LdapIp);
+                            $this->LdapLogin = trim($value);
                         }
                         else if( trim($key) === "LDAP_password" )
                         {
-                            $this->$LdapPassword = trim($value);
-                            array_push($this->$LdapPassword, $LdapIp);
-                        }
-                        else if( trim($key) === "LDAP_container" )
-                        {
-                            $this->$LdapDomainContainer = trim( $value );
-                            array_push($this->$LdapDomainContainer, $LdapIp);
+                            $this->LdapPassword = trim($value);
                         }
                         else if( trim($key) === "LDAP_domain" )
                         {
-                            $this->$LdapDomain = trim( $value );
-                            array_push($this->$LdapDomain, $LdapIp);
+                            $this->LdapDomain = trim( $value );
                         }
                         else if ( trim($key) === "LDAP_group_guid" )
                         {
-                            $this->$LdapGroupGUID = trim( $value );
-                            array_push($this->$LdapGroupGUID, $LdapIp);
+                            $this->LdapGroupGUID = trim( $value );
                         }
                         else if( trim($key) === "Domain_prefix" )
                         {
-                            $this->$DomainPrefix = trim( $value );
-                            array_push($this->$DomainPrefix, $LdapIp);
+                            $this->DomainPrefix = trim( $value );
                         }
                         else if( trim($key) === "LocalNet" )
                         {
-                            $this->$LocalNet = trim( $value );
-                            array_push($this->$LocalNet, $LdapIp);
+                            $this->LocalNet = trim( $value );
                         }
                         else if( trim($key) === "Squid_IP" )
                         {
-                            $this->$SquidIP = trim( $value );
-                            array_push($this->$SquidIP, $LdapIp);
+                            $this->SquidIP = trim( $value );
                         }
                         else if( trim($key) === "MYSQL_ROOT_login" )
                         {
-                            $this->$MysqlRootLogin = trim( $value );
-                            array_push($this->$MysqlRootLogin, $LdapIp);
+                            $this->MysqlRootLogin = trim( $value );
                         }
                         else if( trim($key) === "MYSQL_ROOT_password" )
                         {
-                            $this->$MysqlRootPassword = trim( $value );
-                            array_push($this->$MysqlRootPassword, $LdapIp);
+                            $this->MysqlRootPassword = trim( $value );
                         }
                         else if( trim($key) === "MYSQL_login" )
                         {
-                            $this->$MysqlLogin = trim( $value );
-                            array_push($this->$MysqlLogin, $LdapIp);
+                            $this->MysqlLogin = trim( $value );
                         }
                         else if( trim($key) === "MYSQL_password" )
                         {
-                            $this->$MysqlPassword = trim( $value );
-                            array_push($this->$MysqlPassword, $LdapIp);
+                            $this->MysqlPassword = trim( $value );
                         }
                         else if( trim($key) === "MYSQL_ip" )
                         {
-                            $this->$MysqlIp = trim( $value );
-                            array_push($this->$MysqlIp, $LdapIp);
+                            $this->MysqlIp = trim( $value );
                         }
                         else if ( trim($key) === "MYSQL_database" )
                         {
-                            $this->$MysqlDatabase = trim( $value );
-                            array_push($this->$MysqlDatabase, $LdapIp);
+                            $this->MysqlDatabase = trim( $value );
                         }
                         else if ( trim($key) === "SQUID_mode")
                         {
-                            $this->$SquidMode = trim( $value );
-                            array_push($this->$SquidMode, $LdapIp);
+                            $this->SquidMode = trim( $value );
                         }
                         else if ( trim($key) === "SQUID_logfile" )
                         {
-                            $this->$SquidLogfile = trim( $value );
-                            array_push($this->$SquidLogfile, $LdapIp);
+                            $this->SquidLogfile = trim( $value );
                         }
-
                     }
-
                 }
             }
 
             fclose($handler);
 
-            if ( count($this->parsedVars) > 1 )
+            if (
+                empty($this->LdapIp) or
+                empty($this->LdapLogin) or
+                empty($this->LdapPassword) or
+                empty($this->LdapDomain) or
+                empty($this->LdapGroupGUID) or
+                empty($this->DomainPrefix) or
+                empty($this->LocalNet) or
+                empty($this->SquidIP) or
+                empty($this->MysqlRootLogin) or
+                empty($this->MysqlRootPassword) or
+                empty($this->MysqlLogin) or
+                empty($this->MysqlPassword) or
+                empty($this->MysqlIp) or
+                empty($this->MysqlDatabase) or
+                empty($this->SquidMode) or
+                empty($this->SquidLogfile)
+            )
             {
-
+                throw new Exception("One or more config line is empty! Check config file!");
             }
         }
 

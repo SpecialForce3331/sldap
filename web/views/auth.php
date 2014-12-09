@@ -23,7 +23,6 @@
 
             if ( $ldapBind )
             {
-                error_log("auth succefull");
                 ldap_close($ldapConn);
                 return true;
             }
