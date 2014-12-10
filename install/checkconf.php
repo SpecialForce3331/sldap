@@ -1,5 +1,7 @@
 <?php 
 
+require_once(__DIR__.'/../exceptions/ConfigException.php');
+
     class Config
     {
         //создаем необходимые переменные
@@ -7,6 +9,7 @@
         public $LdapLogin;
         public $LdapPassword;
         public $LdapGroupGUID;
+        public $LdapGroupAdminGUID;
         public $LdapDomain;
 
         public $DomainPrefix;
@@ -72,6 +75,10 @@
                         {
                             $this->LdapGroupGUID = trim( $value );
                         }
+                        else if ( trim($key) === "LDAP_group_admin_guid" )
+                        {
+                            $this->LdapGroupAdminGUID = trim( $value );
+                        }
                         else if( trim($key) === "Domain_prefix" )
                         {
                             $this->DomainPrefix = trim( $value );
@@ -128,6 +135,7 @@
                 empty($this->LdapPassword) or
                 empty($this->LdapDomain) or
                 empty($this->LdapGroupGUID) or
+                empty($this->LdapGroupAdminGUID) or
                 empty($this->DomainPrefix) or
                 empty($this->LocalNet) or
                 empty($this->SquidIP) or
@@ -141,7 +149,7 @@
                 empty($this->SquidLogfile)
             )
             {
-                throw new Exception("One or more config line is empty! Check config file!");
+                throw new ConfigException();
             }
         }
 

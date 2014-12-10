@@ -22,7 +22,7 @@ namespace Doctrine\DBAL\Sharding;
 use Doctrine\DBAL\DBALException;
 
 /**
- * Sharding related Exceptions
+ * Sharding related exceptions
  *
  * @since 2.3
  */

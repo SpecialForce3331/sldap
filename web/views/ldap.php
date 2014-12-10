@@ -8,7 +8,8 @@
         private $login;
         private $password;
         private $domain;
-        private $groupGUID;
+        private $groupUserGUID;
+        private $groupAdminGUID;
         private $ldapConn;
         private $ldapBind;
 
@@ -18,7 +19,8 @@
             $this->login = $config->LdapLogin;
             $this->password = $config->LdapPassword;
             $this->domain = $config->LdapDomain;
-            $this->groupGUID = $config->LdapGroupGUID;
+            $this->groupUserGUID = $config->LdapGroupGUID;
+            $this->groupAdminGUID = $config->LdapGroupAdminGUID;
 
             $this->ldapConn = ldap_connect( $this->server );
             ldap_set_option( $this->ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
@@ -27,14 +29,16 @@
             $this->ldapBind = ldap_bind( $this->ldapConn, $this->login, $this->password );
         }
 
-        public function getLdapUsers($existUsers)
+        public function getLdapUsers($existUsers, $type)
         {
-            $groupFilter = "(&(objectGUID=".$this->groupGUID."))";
+            $groupGUID = $type === "users" ? $this->groupUserGUID : $this->groupAdminGUID;
+
+            $groupFilter = "(&(objectGUID=".$groupGUID."))";
             $ldapSearch = ldap_search($this->ldapConn, $this->domain, $groupFilter, array("distinguishedName"));
             $groupResult = ldap_get_entries( $this->ldapConn, $ldapSearch );
             $group = $groupResult[0]["distinguishedname"][0];
 
-            $filter ="(&(memberof=".$group.")(cn=*)";
+            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof=".$group.")(cn=*)";
 
             if ( $this->ldapBind )
             {
@@ -70,7 +74,7 @@
                 }
                 else
                 {
-                    return json_encode( array( "result" => $result ) );
+                    return json_encode( array( "result" => "false" ));
                 }
             }
         }

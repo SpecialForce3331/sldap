@@ -69,9 +69,9 @@ function getMysqlUsers() //получаем пользователей из БД
     }, true);
 }
 
-function getLdapUsers() //получаем список пользователей из AD
+function getLdapUsers(type) //получаем список пользователей из AD
 {
-    sendAJAXCommand("/api",{action: "getLdapUsers"}, function(data){
+    sendAJAXCommand("/api",{action: "getLdapUsers", type: type}, function(data){
 
         $("#main").empty();
         $("#panel").empty();
@@ -81,8 +81,8 @@ function getLdapUsers() //получаем список пользователе
         $("#ldapUsers").append("<thead>" +
             "<tr>" +
             "<td>[]</td>" +
-            "<td>Логин</td>" +
             "<td>ФИО</td>" +
+            "<td>Логин</td>" +
             "<td>Шаблон</td>" +
             "</tr></thead><tbody>");
 
@@ -97,8 +97,8 @@ function getLdapUsers() //получаем список пользователе
 
             $("#ldapUsers").append("<tr>" +
                 "<td><input type='checkbox'/></td>" +
-                "<td>" + sam + "</td>" +
                 "<td>" + name + "</td>" +
+                "<td>" + sam + "</td>" +
                 "<td><select class='patterns'></select></td>" +
                 "</tr>");
 
@@ -137,7 +137,7 @@ function doWithUsers(what) //работа с пользователями в Б�
 
                             if ( what == "addUsers")
                             {
-                                getLdapUsers();
+                                getLdapUsers('users');
                             }
                             else if ( what == "deleteUsers" )
                             {
@@ -201,9 +201,11 @@ function getPatterns() // получаем шаблоны из БД и отоб�
             "<button onclick='showEditPattern()'>Изменить</button>" +
             "<button onclick='deletePattern()'>Удалить</button>" +
             "");
+
+        applyStyleForTable($("#patterns"));
     }, true);
 
-    applyStyleForTable($("#patterns"));
+
 }
 
 function getPatternsForList() // получаем шаблоны из бд и наполняем выпадающий список при редактировании пользователей этими шаблонами
@@ -595,10 +597,10 @@ function cleanSelectAll()
 //Передается jquery объект таблицы
 function applyStyleForTable(table) {
     table.dataTable( {
-        "scrollY":        "500px",
+        "scrollY":        "450px",
         "scrollCollapse": true,
         "paging":         false,
-        "language": {"url": "/sldap/DataTables-1.10.0/russian.lang"},
+        "language": {"url": "/static/DataTables-1.10.0/russian.lang"},
         "bRetrieve": true
     } );
 }
@@ -732,6 +734,73 @@ function selectUserPopup(object)
     toggleCssClass($(object), 'selectable-row', 'selectable-row-selected');
 }
 
+function selectAdminsFromPopupList()
+{
+    sendAJAXCommand("/api", {action: "getLdapUsers", type: "admins"}, function (data) {
+        $("#adminList").html("<table id='admin_table'>" +
+        "<thead><tr>" +
+        "<td>ФИО</td>" +
+        "<td>Логин</td>" +
+        "<td>Шаблон прав</td>" +
+        "</tr></thead><tbody>" +
+        "</table>");
+
+        for (var i = 0; i < data.result.count; i++) {
+            var sam = data.result[i]['samaccountname'][0];
+            var name = data.result[i]['dn'].split(",")[0].split("CN=")[1];
+            $("#admin_table").append(
+                "<tr class='selectable-row'>" +
+                "<td>" + name + "</td>" +
+                "<td>" + sam + "</td>" +
+                "<td>" +
+                    "<select class='permissions'></select>" +
+                "</td>" +
+                "</tr>");
+        }
+
+        getPermissionList();
+
+        $("#admin_table").append("</tbody>");
+
+        $("#admin_table tr").each(function(){
+            $(this).click(function(){
+                toggleCssClass($(this), 'selectable-row', 'selectable-row-selected');
+            });
+        });
+
+        applyStyleForTable($("#admin_table"));
+
+        $("#adminList").dialog({
+            width: 500,
+            buttons: [
+                {
+                    text: "OK",
+                    click: function ()
+                    {
+                        var admins = new Array();
+
+                        $("tr.selectable-row-selected").each(function()
+                        {
+                            admins.push([$(this).find("td")[1].innerHTML, $(this).find("td select").val()]);
+                        });
+
+                        createAdminAccount(admins);
+
+                        $(this).dialog("destroy");
+                    }
+                },
+                {
+                    text: "Отмена",
+                    click: function () {
+                        $(this).dialog("destroy");
+                    }
+                }
+            ]
+        });
+
+    }, true);
+}
+
 function showPreferences()
 {
     $("#main").empty();
@@ -746,7 +815,7 @@ function showAdmins()
     $("#main").empty();
     $("#panel").empty();
 
-    sendAJAXCommand("/api",{action: "showAdmins"}, function(data){
+    sendAJAXCommand("/api",{action: "getAdmins"}, function(data){
         $("#main").append("<table id='admins'></table>");
         $("#admins").append("" +
             "<thead>" +
@@ -772,7 +841,12 @@ function showAdmins()
         applyStyleForTable( $("#admins") );
     }, true);
 
-    $("#panel").append("<button onclick='showFormCreateAdmin()'>Создать</button><button onclick='doWithAdmins(\"edit\")'>Изменить</button><button onclick='doWithAdmins(\"delete\")'>Удалить</button>");
+    $("#panel").append("" +
+    "<div style='display: none;' id='adminList'></div>" +
+    "<button onclick='showFormCreateAdmin()'>Создать</button>" +
+    "<button onclick='selectAdminsFromPopupList()'>Добавить</button>" +
+    "<button onclick='doWithAdmins(\"edit\")'>Изменить</button>" +
+    "<button onclick='doWithAdmins(\"delete\")'>Удалить</button>");
 
 }
 
@@ -794,7 +868,7 @@ function doWithAdmins( what )
     }
     else if( what == "delete" )
     {
-        console.log(checkedAdmins);
+        deleteAdmins(checkedAdmins);
     }
 }
 
@@ -855,14 +929,33 @@ function getPermissionList()
     }, true);
 }
 
-function createAdminAccount()
+function createAdminAccount(data)
+{
+    if( typeof data != 'undefined' )
+    {
+        sendAJAXCommand("/api", {
+            action: "createLdapAdminAccounts",
+            data: data
+        }, showAdmins);
+    }
+    else
+    {
+        sendAJAXCommand("/api", {
+            action: "createAdminAccount",
+            login: $("#login").val(),
+            password: $("#password").val(),
+            retype_password: $("#retype_password").val(),
+            permission_id: $(".permissions").val()
+        }, showAdmins);
+    }
+
+}
+
+function deleteAdmins(data)
 {
     sendAJAXCommand("/api", {
-        action: "createAdminAccount",
-        login: $("#login").val(),
-        password: $("#password").val(),
-        retype_password: $("#retype_password").val(),
-        permission_id: $(".permissions").val()
+        action: "deleteAdmins",
+        data: data
     }, showAdmins);
 }
 

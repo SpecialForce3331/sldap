@@ -27,6 +27,11 @@
             }
         }
 
+        function __destruct()
+        {
+            $this->mysqli->close();
+        }
+
         function adminLogin($login, $password)
         {
             $statement = $this->mysqli->prepare("SELECT id FROM admins WHERE login=? AND password=?") or die ( "не удалось подготовить запрос: ".$this->mysqli->error );
@@ -424,12 +429,12 @@
             return json_encode( array("result" => "ok", "data" => $patternsData) );
         }
 
-        function showAdmins()
+        function getAdmins()
         {
             $query = "SELECT admins.id, admins.login, permissions.name, permissions.id FROM admins LEFT JOIN permissions ON admins.permission_id = permissions.id";
             $result = $this->mysqli->query( $query ) or die( $this->mysqli->error." select error" );
             $admins = $result->fetch_all( MYSQLI_NUM );
-            return json_encode( array("result" => "ok", "data" => $admins) );
+            return json_encode( array("data" => $admins) );
         }
 
         function getPermissions()
@@ -445,7 +450,6 @@
             if ( !$this->checkPermissions($this->mysqli, "createAdmins") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
-                return;
             }
 
             if( $password != $retype_password )
@@ -463,6 +467,48 @@
                 return json_encode(array("result" => "ok", "message" => "Учетная запись администратора успешно создана"));
 
             }
+        }
+
+        public function createLdapAdminAccounts($data)
+        {
+            $sql = "INSERT INTO admins (login, permission_id) VALUES ";
+
+            for( $i = 0; $i < count($data); $i++ )
+            {
+                if ( $i === count($data)-1 )
+                {
+                    $sql = $sql."(\"".$data[$i][0]."\",\"".$data[$i][1]."\")";
+                }
+                else
+                {
+                    $sql = $sql."(\"".$data[$i][0]."\",\"".$data[$i][1]."\"),";
+                }
+
+            }
+
+            $statement = $this->mysqli->prepare($sql) or die ("не удалось подготовить запрос: " . $this->mysqli->error);
+            $statement->execute() or die("не удалось выполнить добавление учетной(ых) записи(ей) администратора(ов) " . $statement->error);
+            return json_encode(array("result" => "ok", "message" => "Учетная(ые) запись(и) администратора(ов) успешно создана(ы)"));
+        }
+
+        public function deleteAdmins($data)
+        {
+            $sql = "DELETE FROM admins WHERE id IN (";
+
+            for ( $i = 0; $i < count($data); $i++ )
+            {
+                if ( $i === count($data)-1 )
+                {
+                    $sql = $sql.$data[$i][0].")";
+                }
+                else
+                {
+                    $sql = $sql.$data[$i][0].",";
+                }
+            }
+            $statement = $this->mysqli->prepare($sql) or die ("не удалось подготовить запрос: " . $this->mysqli->error);
+            $statement->execute() or die("не удалось выполнить удаление учетной(ых) записи(ей) администратора(ов) " . $statement->error);
+            return json_encode(array("result" => "ok", "message" => "Учетная(ые) запись(и) администратора(ов) успешно удален(ы)"));
         }
 
         public function applyChangesToAdmin($changes)

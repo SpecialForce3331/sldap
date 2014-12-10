@@ -71,7 +71,7 @@ class PdoSessionHandler implements \SessionHandlerInterface
             throw new \InvalidArgumentException('You must provide the "db_table" option for a PdoSessionStorage.');
         }
         if (\PDO::ERRMODE_EXCEPTION !== $pdo->getAttribute(\PDO::ATTR_ERRMODE)) {
-            throw new \InvalidArgumentException(sprintf('"%s" requires PDO error mode attribute be set to throw Exceptions (i.e. $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION))', __CLASS__));
+            throw new \InvalidArgumentException(sprintf('"%s" requires PDO error mode attribute be set to throw exceptions (i.e. $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION))', __CLASS__));
         }
         $this->pdo = $pdo;
         $dbOptions = array_merge(array(

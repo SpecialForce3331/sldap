@@ -9,7 +9,7 @@
  */
 
 /**
- * Listens for Exceptions thrown from within the Transport system.
+ * Listens for exceptions thrown from within the Transport system.
  *
  * @author     Chris Corbyn
  */

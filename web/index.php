@@ -20,7 +20,8 @@ try {
 }
 catch(Exception $e)
 {
-    $error = $e;
+    echo($e->getMessage());
+    exit();
 }
 
 $filename = __DIR__.preg_replace('#(\?.*)$#', '', $_SERVER['REQUEST_URI']);
@@ -36,14 +37,7 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
 
 $app->get('/', function() use ($app, $error, $ldap)
 {
-    if ( !empty($error) )
-    {
-        return $error;
-    }
-    else
-    {
-        return $app['twig']->render('index.html');
-    }
+    return $app['twig']->render('index.html');
 });
 
 $app->post('/login', function(Request $request) use ($app, $mysql)
@@ -52,7 +46,6 @@ $app->post('/login', function(Request $request) use ($app, $mysql)
     $password = $request->get("password");
     if( $mysql->adminLogin($login, $password) )
     {
-        error_log("success");
         $app['session']->set('user', array('login' => $login));
         return $app->redirect("/main");
     }
@@ -65,6 +58,12 @@ $app->post('/login', function(Request $request) use ($app, $mysql)
 $app->get('/main', function() use ($app)
 {
     return $app['twig']->render('main.html');
+})->before(function() use($app)
+{
+    if ( null === $user = $app['session']->get('user') )
+    {
+        return $app->redirect('/');
+    }
 });
 
 $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
@@ -77,7 +76,9 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
     }
     elseif( $action === "getLdapUsers")
     {
-        return $ldap->getLdapUsers($mysql->getExistUsers());
+        $type = $request->get("type");
+        $existUsers = $type === "users" ? $mysql->getExistUsers() : $mysql->getAdmins();
+        return $ldap->getLdapUsers($existUsers, $type);
     }
     elseif( $action === "cleanTraffic" )
     {
@@ -159,9 +160,9 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
         $login = $request->get("login");
         return $mysql->getTop($type, $count, $fromDate, $toDate, $login);
     }
-    elseif( $action === "showAdmins" )
+    elseif( $action === "getAdmins" )
     {
-        return $mysql->showAdmins();
+        return $mysql->getAdmins();
     }
     elseif( $action === "getPermissions" )
     {
@@ -175,9 +176,23 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
         $permission_id = $request->get("permission_id");
         return $mysql->createAdminAccount($login, $password, $retype_password, $permission_id);
     }
+    elseif( $action === "deleteAdmins" )
+    {
+        return $mysql->deleteAdmins($request->get("data"));
+    }
+    elseif( $action === "createLdapAdminAccounts" )
+    {
+        return $mysql->createLdapAdminAccounts($request->get("data"));
+    }
     elseif( $action === "applyChangesToAdmin")
     {
         return $mysql->applyChangesToAdmin($request->get("changes"));
+    }
+})->before(function() use($app)
+{
+    if ( null === $user = $app['session']->get('user') )
+    {
+        return $app->redirect('/');
     }
 });
 

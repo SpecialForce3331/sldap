@@ -699,7 +699,7 @@ class OptionsResolver implements Options, OptionsResolverInterface
      * Merges options with the default values stored in the container and
      * validates them.
      *
-     * Exceptions are thrown if:
+     * exceptions are thrown if:
      *
      *  - Undefined options are passed;
      *  - Required options are missing;

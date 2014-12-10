@@ -372,7 +372,7 @@ class ErrorHandler
                 }
 
                 if (PHP_VERSION_ID <= 50407 && (PHP_VERSION_ID >= 50400 || PHP_VERSION_ID <= 50317)) {
-                    // Exceptions thrown from error handlers are sometimes not caught by the exception
+                    // exceptions thrown from error handlers are sometimes not caught by the exception
                     // handler and shutdown handlers are bypassed before 5.4.8/5.3.18.
                     // We temporarily re-enable display_errors to prevent any blank page related to this bug.
 

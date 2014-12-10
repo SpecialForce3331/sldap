@@ -107,7 +107,7 @@ class HttpKernel implements HttpKernelInterface, TerminableInterface
     /**
      * Handles a request to convert it to a response.
      *
-     * Exceptions are not caught.
+     * exceptions are not caught.
      *
      * @param Request $request A Request instance
      * @param int     $type    The type of the request (one of HttpKernelInterface::MASTER_REQUEST or HttpKernelInterface::SUB_REQUEST)
