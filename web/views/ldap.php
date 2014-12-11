@@ -12,6 +12,7 @@
         private $groupAdminGUID;
         private $ldapConn;
         private $ldapBind;
+        private $DomainPrefix;
 
         function __construct($config)
         {
@@ -21,6 +22,7 @@
             $this->domain = $config->LdapDomain;
             $this->groupUserGUID = $config->LdapGroupGUID;
             $this->groupAdminGUID = $config->LdapGroupAdminGUID;
+            $this->DomainPrefix = $config->DomainPrefix;
 
             $this->ldapConn = ldap_connect( $this->server );
             ldap_set_option( $this->ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
@@ -79,22 +81,38 @@
             }
         }
 
-        public function ldapAuth($login, $password)
+        public function ldapAdminAuth($login, $password)
         {
-            $ldapConn = ldap_connect( $this->server );
-            ldap_set_option( $ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3 );
-            ldap_set_option( $ldapConn, LDAP_OPT_REFERRALS, 0);
+            $ldapBind = ldap_bind($this->ldapConn, $login.$this->DomainPrefix, $password);
 
-            $ldapBind = ldap_bind( $this->ldapConn, $login, $password ) or die("can't auth with: ".$this->ldapConn." ".$login." ".$password);
+            $groupGUID = $this->groupAdminGUID;
+
+            $groupFilter = "(&(objectGUID=".$groupGUID."))";
+            $ldapSearch = ldap_search($this->ldapConn, $this->domain, $groupFilter, array("distinguishedName"));
+            $groupResult = ldap_get_entries( $this->ldapConn, $ldapSearch );
+            $group = $groupResult[0]["distinguishedname"][0];
+
+            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof=".$group.")(cn=*))";
 
             if ( $ldapBind )
             {
-                ldap_close($ldapConn);
-                return true;
+                $attribute =  array("samAccountName");
+
+                $ldapSearch = ldap_search($this->ldapConn, $this->domain, $filter, $attribute);
+                $result = ldap_get_entries( $this->ldapConn, $ldapSearch );
+
+                foreach( $result as $sam )
+                {
+                    $sam = $sam["samaccountname"][0];
+                    if ( strtolower($sam) === strtolower($login) )
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
             else
             {
-                ldap_close($ldapConn);
                 return false;
             }
         }

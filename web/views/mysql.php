@@ -2,7 +2,6 @@
 
     class Mysql
     {
-
         private $server;
         private $username;
         private $password;
@@ -383,9 +382,9 @@
             return json_encode( array("result" => "ok", "message" => "Успешно внесены изменения шаблона прав" ) );
         }
 
-        function getExistUsers()
+        function getExistAccounts($type)
         {
-            $result = $this->mysqli->query("SELECT users.login FROM users") or die("can not get exist users " . $this->mysqli->error);;
+            $result = $this->mysqli->query("SELECT login FROM ".$type) or die("can not get exist " . $type ." ". $this->mysqli->error);;
 
             if ($this->mysqli->connect_errno) {
                 echo "Failed to connect to MySQL: (" . $this->mysqli->connect_errno . ") " . $this->mysqli->connect_error;
@@ -436,6 +435,21 @@
             $admins = $result->fetch_all( MYSQLI_NUM );
             return json_encode( array("data" => $admins) );
         }
+
+        public function checkAdminExist($login)
+        {
+            $query = "SELECT 1 FROM admins WHERE login = ?";
+            $statement = $this->mysqli->prepare( $query ) or die( $this->mysqli->error." select error" );
+            $statement->bind_param('s', $login );
+            $statement->execute();
+            $result = $statement->get_result();
+            if ( $result->num_rows > 0 )
+            {
+                return true;
+            }
+            return false;
+        }
+
 
         function getPermissions()
         {

@@ -40,11 +40,11 @@ $app->get('/', function() use ($app, $error, $ldap)
     return $app['twig']->render('index.html');
 });
 
-$app->post('/login', function(Request $request) use ($app, $mysql)
+$app->post('/login', function(Request $request) use ($app, $mysql, $ldap)
 {
     $login = $request->get("login");
     $password = $request->get("password");
-    if( $mysql->adminLogin($login, $password) )
+    if( $mysql->checkAdminExist($login) and $ldap->ldapAdminAuth($login, $password) )
     {
         $app['session']->set('user', array('login' => $login));
         return $app->redirect("/main");
@@ -77,7 +77,7 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
     elseif( $action === "getLdapUsers")
     {
         $type = $request->get("type");
-        $existUsers = $type === "users" ? $mysql->getExistUsers() : $mysql->getAdmins();
+        $existUsers = $type === "users" ? $mysql->getExistAccounts("users") : $mysql->getExistAccounts("admins");
         return $ldap->getLdapUsers($existUsers, $type);
     }
     elseif( $action === "cleanTraffic" )
