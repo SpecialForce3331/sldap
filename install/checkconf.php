@@ -1,6 +1,6 @@
 <?php 
 
-require_once(__DIR__ . '/../exceptions/ConfigException.php');
+require_once(__DIR__ . '/../Exceptions/ConfigException.php');
 
     class Config
     {
