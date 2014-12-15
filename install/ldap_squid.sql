@@ -122,7 +122,7 @@ INSERT INTO `permissions` (`id`, `name`, `addUsers`, `editUsers`, `deleteUsers`,
 CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `login` VARCHAR(45) NOT NULL ,
-  `password` VARCHAR(45) NOT NULL ,
+  `password` VARCHAR(45),
   `permission_id` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `permission_id_idx` (`permission_id` ASC) ,

@@ -1,4 +1,6 @@
-<?php 
+<?php
+
+    use Symfony\Component\HttpFoundation\Session\Session;
 
     class Mysql
     {
@@ -37,11 +39,11 @@
             $statement->bind_param('ss', $login, $password);
             $statement->execute() or die( "не удалось получить данные администратора ".$statement->error );
             $result = $statement->get_result();
-            $count = $result->num_rows;
+            $user_id = $result->fetch_row();
 
-            if ( $count > 0 )
+            if ( !empty($user_id) )
             {
-                return true;
+                return $user_id[0];
             }
             else
             {
@@ -66,7 +68,7 @@
 
         function cleanTraffic($users)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editUsers") )
+            if ( !$this->checkPermissions( "editUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
                 return;
@@ -94,7 +96,7 @@
 
         function addUsers($data)
         {
-            if ( !$this->checkPermissions($this->mysqli, "addUsers") )
+            if ( !$this->checkPermissions( "addUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
                 return;
@@ -121,7 +123,7 @@
 
         function deleteUsers($data)
         {
-            if ( !$this->checkPermissions($this->mysqli, "deleteUsers") )
+            if ( !$this->checkPermissions( "deleteUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
                 return;
@@ -157,7 +159,7 @@
 
         function createPattern($name, $traffic, $access)
         {
-            if ( !$this->checkPermissions($this->mysqli, "createPatterns") )
+            if ( !$this->checkPermissions( "createPatterns") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -177,7 +179,7 @@
 
         function deletePattern($patterns)
         {
-            if ( !$this->checkPermissions($this->mysqli, "deletePatterns") )
+            if ( !$this->checkPermissions( "deletePatterns") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -202,7 +204,7 @@
 
         function applyChangesToUsers($changes)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editUsers") )
+            if ( !$this->checkPermissions( "editUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -217,7 +219,7 @@
 
         function applyChangesToPatterns($changes)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editPatterns") )
+            if ( !$this->checkPermissions( "editPatterns") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -242,7 +244,7 @@
 
         function createDenySite($url)
         {
-            if ( !$this->checkPermissions($this->mysqli, "addDenySites") )
+            if ( !$this->checkPermissions( "addDenySites") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
                 return;
@@ -275,7 +277,7 @@
 
         function deleteDenySite($url)
         {
-            if ( !$this->checkPermissions($this->mysqli, "deleteDenySites") )
+            if ( !$this->checkPermissions( "deleteDenySites") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -301,7 +303,7 @@
 
         function editDenySite($changes)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editDenySites") )
+            if ( !$this->checkPermissions( "editDenySites") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -335,7 +337,7 @@
 
         function applyChangesToPermissions($id, $name, $permissions)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editPermissions") )
+            if ( !$this->checkPermissions( "editPermissions") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
                 return;
@@ -438,14 +440,16 @@
 
         public function checkAdminExist($login)
         {
-            $query = "SELECT 1 FROM admins WHERE login = ?";
+            $query = "SELECT id FROM admins WHERE login = ?";
             $statement = $this->mysqli->prepare( $query ) or die( $this->mysqli->error." select error" );
             $statement->bind_param('s', $login );
             $statement->execute();
             $result = $statement->get_result();
-            if ( $result->num_rows > 0 )
+            $user_id = $result->fetch_row();
+
+            if ( !empty($user_id) )
             {
-                return true;
+                return $user_id[0];
             }
             return false;
         }
@@ -461,7 +465,7 @@
 
         function createAdminAccount($login, $password, $retype_password, $permission_id)
         {
-            if ( !$this->checkPermissions($this->mysqli, "createAdmins") )
+            if ( !$this->checkPermissions( "createAdmins") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -485,6 +489,12 @@
 
         public function createLdapAdminAccounts($data)
         {
+            error_log($this->checkPermissions("createAdmins"));
+            if ( !$this->checkPermissions("createAdmins") )
+            {
+                return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            }
+
             $sql = "INSERT INTO admins (login, permission_id) VALUES ";
 
             for( $i = 0; $i < count($data); $i++ )
@@ -507,6 +517,11 @@
 
         public function deleteAdmins($data)
         {
+            if ( !$this->checkPermissions( "deleteAdmins") )
+            {
+                return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
+            }
+
             $sql = "DELETE FROM admins WHERE id IN (";
 
             for ( $i = 0; $i < count($data); $i++ )
@@ -527,7 +542,7 @@
 
         public function applyChangesToAdmin($changes)
         {
-            if ( !$this->checkPermissions($this->mysqli, "editAdmins") )
+            if ( !$this->checkPermissions( "editAdmins") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
@@ -568,25 +583,28 @@
 
         private function checkPermissions($permission)
         {
-            if ( $permission == "addUsers" or
-                $permission == "editUsers" or
-                $permission == "deleteUsers" or
-                $permission == "createPatterns" or
-                $permission == "editPatterns" or
-                $permission == "deletePatterns" or
-                $permission == "addDenySites" or
-                $permission == "editDenySites" or
-                $permission == "deleteDenySites" or
-                $permission == "createAdmins" or
-                $permission == "editAdmins" or
-                $permission == "deleteAdmins" or
-                $permission == "createPermissions" or
-                $permission == "editPermissions" or
-                $permission == "deletePermissions"
+            $session = new Session();
+
+            if ( $permission === "addUsers" or
+                $permission === "editUsers" or
+                $permission === "deleteUsers" or
+                $permission === "createPatterns" or
+                $permission === "editPatterns" or
+                $permission === "deletePatterns" or
+                $permission === "addDenySites" or
+                $permission === "editDenySites" or
+                $permission === "deleteDenySites" or
+                $permission === "createAdmins" or
+                $permission === "editAdmins" or
+                $permission === "deleteAdmins" or
+                $permission === "createPermissions" or
+                $permission === "editPermissions" or
+                $permission === "deletePermissions"
             )
             {
-                $query = "SELECT ".$permission." FROM permissions LEFT JOIN admins ON (permissions.id = admins.permission_id) WHERE admins.id = ".$_SESSION["user_id"];
-                $result = $this->mysqli->query( $query ) or die( $this->mysqli->error." | select permission error" );
+                $query = "SELECT ".$permission." FROM permissions LEFT JOIN admins ON (permissions.id = admins.permission_id) WHERE admins.id = ".$session->get("user")["id"];
+                error_log($query);
+                $result = $this->mysqli->query( $query ) or die( $this->mysqli->error." - select permission error" );
                 $access = $result->fetch_row();
 
                 $answer = $access[0] == 1 ? true : false;
@@ -594,7 +612,8 @@
             }
             else
             {
-                return "Запрошенных прав не существует";
+                error_log("incorrect permission request ".$permission);
+                return false;
             }
         }
 

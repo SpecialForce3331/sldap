@@ -45,14 +45,14 @@ $app->post('/login', function(Request $request) use ($app, $mysql, $ldap)
     $login = $request->get("login");
     $password = $request->get("password");
 
-    if( $login === "root" and $mysql->adminLogin($login, $password) )
+    if( $login === "root" and ( $user_id = $mysql->adminLogin($login, $password) ) )
     {
-        $app['session']->set('user', array('login' => $login));
+        $app['session']->set('user', array('id' => $user_id, 'login' => $login));
         return $app->redirect("/main");
     }
-    else if( $mysql->checkAdminExist($login) and $ldap->ldapAdminAuth($login, $password) )
+    else if( ( $user_id = $mysql->checkAdminExist($login) ) and $ldap->ldapAdminAuth($login, $password) )
     {
-        $app['session']->set('user', array('login' => $login));
+        $app['session']->set('user', array('id' => $user_id, 'login' => $login));
         return $app->redirect("/main");
     }
     else
