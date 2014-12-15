@@ -88,7 +88,7 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
     }
     elseif( $action === "cleanTraffic" )
     {
-        return $mysql->cleanTraffic($request->get("users"));
+        return $mysql->cleanTraffic($request->get("data"));
     }
     elseif( $action === "addUsers" )
     {

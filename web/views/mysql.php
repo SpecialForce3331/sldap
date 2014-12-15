@@ -71,7 +71,6 @@
             if ( !$this->checkPermissions( "editUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
-                return;
             }
 
             $query = "UPDATE users SET trafficForDay= 0 WHERE login in (";
@@ -88,7 +87,6 @@
                 }
 
             }
-
             $this->mysqli->query( $query ) or die("can not erase users traffic ".$this->mysqli->error );
 
             return json_encode( array( "result" => "ok", "message" => "Траффик пользователей успешно очищен." ));
