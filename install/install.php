@@ -1,24 +1,25 @@
 <?php
 
 //сначала проверим заполнен ли файл конфигурации
-include 'checkconf.php';
+require_once('checkconf.php');
 
+$checkConf = new Checkconf();
 
-if( !empty($LdapIp) &&
-    !empty($LdapLogin) &&
-    !empty($LdapPassword) &&
-    !empty($LdapDomain) &&
-    !empty($MysqlRootLogin) &&
-    !empty($MysqlRootPassword) &&
-    !empty($MysqlLogin) &&
-    !empty($MysqlPassword) &&
-    !empty($MysqlIp) &&
-    !empty($MysqlDatabase) &&
-    !empty($SquidLogfile) &&
-    !empty($sldapDirectory) &&
-    !empty($DomainPrefix) &&
-    !empty($LocalNet) &&
-    !empty($SquidIP)
+if( !empty($checkConf->LdapIp) &&
+    !empty($checkConf->LdapLogin) &&
+    !empty($checkConf->LdapPassword) &&
+    !empty($checkConf->LdapDomain) &&
+    !empty($checkConf->MysqlRootLogin) &&
+    !empty($checkConf->MysqlRootPassword) &&
+    !empty($checkConf->MysqlLogin) &&
+    !empty($checkConf->MysqlPassword) &&
+    !empty($checkConf->MysqlIp) &&
+    !empty($checkConf->MysqlDatabase) &&
+    !empty($checkConf->SquidLogfile) &&
+    !empty($checkConf->sldapDirectory) &&
+    !empty($checkConf->DomainPrefix) &&
+    !empty($checkConf->LocalNet) &&
+    !empty($checkConf->SquidIP)
 )
 {
 //создаем БД и добавляем туда таблицы для будущей работы
