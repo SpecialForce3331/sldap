@@ -7,7 +7,6 @@ include 'checkconf.php';
 if( !empty($LdapIp) &&
     !empty($LdapLogin) &&
     !empty($LdapPassword) &&
-    !empty($LdapDomainContainer) &&
     !empty($LdapDomain) &&
     !empty($MysqlRootLogin) &&
     !empty($MysqlRootPassword) &&

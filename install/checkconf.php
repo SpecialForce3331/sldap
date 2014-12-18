@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../Exceptions/ConfigException.php');
         public $SquidMode;
         public $SquidLogfile;
 
+        public $sldapDirectory;
+
         public function __construct()
         {
             //в зависимости от директории из которой инклудят этот файл, определяем директорию.
@@ -39,10 +41,10 @@ require_once(__DIR__ . '/../Exceptions/ConfigException.php');
             }
 
 
-            $sldapDirectory = getcwd();//текущая директория
+            $this->sldapDirectory = getcwd();//текущая директория
 
             //директория определена, читаем конфигурационный файл и пишем в переменные
-            $handler = fopen( $sldapDirectory."/install/config.cfg", "r" ) or die("can not open file");
+            $handler = fopen( $this->sldapDirectory."/install/config.cfg", "r" ) or die("can not open file");
 
             while ( $buffer = fgets( $handler ) )
             {
