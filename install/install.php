@@ -33,7 +33,7 @@ if( !empty($checkConf->LdapIp) &&
 //Формируем путь к парсеру логов squid и добавляем его в cron
     $handler = fopen( $checkConf->sldapDirectory."/install/scripts/crontask", "w" );
 
-    fwrite( $handler, "*/1 * * * * cd ".$checkConf->sldapDirectory." && php -f parser.php \n" );
+    fwrite( $handler, "*/5 * * * * cd ".$checkConf->sldapDirectory." && python3 parser.py \n" );
 
     fclose( $handler );
 
