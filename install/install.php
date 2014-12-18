@@ -1,7 +1,7 @@
 <?php
 
 //сначала проверим заполнен ли файл конфигурации
-require_once(__DIR__ . 'checkconf.php');
+require_once(__DIR__ . '/checkconf.php');
 
 $checkConf = new Config();
 

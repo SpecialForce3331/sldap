@@ -1,8 +1,10 @@
-<?php 
+<?php
 
-	include 'install/checkconf.php';
+    require_once(__DIR__ . '/scripts/checkconf.php');
 
-    $mode = $SquidMode;
+    $checkConf = new Config();
+
+    $mode = $checkConf->SquidMode;
 	$handler = fopen( "squid.conf", "w" ) or die("can not open squid.conf file \n");
 	$config;
 
@@ -10,7 +12,7 @@
     {
         $config = '
             acl all src all
-            acl localnet dst '.$LocalNet.'
+            acl localnet dst '.$checkConf->LocalNet.'
 
             external_acl_type accessCheck ttl=0 %SRC %URI /usr/bin/php -f /var/www/sldap/checkUser.php
             acl allowUsers external accessCheck
@@ -19,7 +21,7 @@
             http_access allow all localnet
             http_access deny all
 
-            deny_info http://'.$SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
+            deny_info http://'.$checkConf->SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
 
 
             http_port 3129
@@ -28,31 +30,31 @@
             visible_hostname squid
 
 
-            access_log '.$SquidLogfile.' squid
+            access_log '.$checkConf->SquidLogfile.' squid
 			';
     }
     else
     {
         $config = '
-            auth_param basic program /usr/lib/squid3/squid_ldap_auth -R -D '.$LdapLogin.' -w '.$LdapPassword.' -b "'.$LdapDomain.'" -f "sAMAccountName=%s" '.$LdapIp.'
+            auth_param basic program /usr/lib/squid3/squid_ldap_auth -R -D '.$checkConf->LdapLogin.' -w '.$checkConf->LdapPassword.' -b "'.$checkConf->LdapDomain.'" -f "sAMAccountName=%s" '.$checkConf->LdapIp.'
             auth_param basic children 5 startup=5 idle=1
             auth_param basic realm Squid proxy-caching web server
             auth_param basic credentialsttl 5 hours
 
             acl users proxy_auth REQUIRED
-            external_acl_type accessCheck ttl=0 %LOGIN %URI python3.4 '.$sldapDirectory.'/helper.py
+            external_acl_type accessCheck ttl=0 %LOGIN %URI python3.4 '.$checkConf->sldapDirectory.'/helper.py
             acl allowUsers external accessCheck
 
             acl all src 0.0.0.0/0
 
             http_access allow allowUsers
             http_access deny all
-            deny_info http://'.$SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
+            deny_info http://'.$checkConf->SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
             http_port 3128
 
             visible_hostname squid
 
-            access_log '.$SquidLogfile.' squid
+            access_log '.$checkConf->SquidLogfile.' squid
             ';
     }
 
