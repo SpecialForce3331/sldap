@@ -21,7 +21,7 @@
             http_access allow all localnet
             http_access deny all
 
-            deny_info http://'.$checkConf->SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
+            deny_info http://'.$checkConf->SquidIP.'/error?message=%o&ip=%i all
 
 
             http_port 3129
@@ -49,7 +49,7 @@
 
             http_access allow allowUsers
             http_access deny all
-            deny_info http://'.$checkConf->SquidIP.'/sldap/error_page.php?status=%o&ip=%i all
+            deny_info http://'.$checkConf->SquidIP.'/error?message=%o&ip=%i all
             http_port 3128
 
             visible_hostname squid

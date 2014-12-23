@@ -30,6 +30,9 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 }
 
 $app = new Silex\Application();
+
+$app['debug'] = true;
+
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/views',
@@ -38,6 +41,25 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
 $app->get('/', function() use ($app, $error, $ldap)
 {
     return $app['twig']->render('index.html');
+});
+
+$app->get('/error', function(Request $request) use ($app)
+{
+    $message = $request->get("message");
+
+    if ( $message === "user_not_exist" )
+    {
+        $message = "Указанного пользователя не существует, обратитесь к администратору.";
+    }
+    else if( $message === "traffic_limit" )
+    {
+        $message = "Вы превысили свой лимит по траффику.";
+    }
+    else if( $message === "deny_site" )
+    {
+        $message = "Данный сайт запрещен к просмотру администратором.";
+    }
+    return $app['twig']->render('error_page.html', [ 'message' => $message ]);
 });
 
 $app->post('/login', function(Request $request) use ($app, $mysql, $ldap)
