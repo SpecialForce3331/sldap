@@ -31,8 +31,6 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 
 $app = new Silex\Application();
 
-$app['debug'] = true;
-
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/views',
