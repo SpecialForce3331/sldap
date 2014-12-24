@@ -51,6 +51,7 @@ def check_access(allow_traffic, user_access, user_login, url_to_open):
         return "OK\n"
 
     user_login = (user_login,)
+
     cursor = conn.cursor()
 
     query = "SELECT " \
@@ -92,6 +93,7 @@ while (True):
         try:
             url = squid_input[0].strip()
             login = squid_input[1].strip()
+            login = login.split("@")[0]
 
             traffic, access = get_user_data(login)
 
