@@ -40,7 +40,7 @@
             $groupResult = ldap_get_entries( $this->ldapConn, $ldapSearch );
             $group = $groupResult[0]["distinguishedname"][0];
 
-            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof=".$group.")(cn=*)";
+            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof:1.2.840.113556.1.4.1941:=".$group.")(cn=*)";
 
             if ( $this->ldapBind )
             {
@@ -92,7 +92,7 @@
             $groupResult = ldap_get_entries( $this->ldapConn, $ldapSearch );
             $group = $groupResult[0]["distinguishedname"][0];
 
-            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof=".$group.")(cn=*))";
+            $filter ="(&(!(objectclass=computer))(!(objectclass=group))(memberof:1.2.840.113556.1.4.1941:=".$group.")(cn=*))";
 
             if ( $ldapBind )
             {
