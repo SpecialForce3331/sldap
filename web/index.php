@@ -30,7 +30,7 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 }
 
 $app = new Silex\Application();
-
+$app['debug'] = false;
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/views',
@@ -127,6 +127,7 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
         $name = $request->get("name");
         $traffic = $request->get("traffic");
         $access = $request->get("access");
+
         return $mysql->createPattern($name, $traffic, $access);
     }
     elseif( $action === "deletePattern" )

@@ -162,10 +162,11 @@
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
             }
 
-            if ( !empty( $name ) && !empty( $traffic ) )
+            if ( !empty( $name ) )
             {
+                $traffic = empty( $traffic) ? 0: $traffic;
                 $query = "INSERT INTO patterns (name,traffic,access) VALUES ('".$name."','".$traffic."','".$access."')";
-                $result = $this->mysqli->query( $query ) or die("insert pattert error");
+                $result = $this->mysqli->query( $query ) or die("insert pattern error");
 
                 return json_encode( array("result"=>"ok", "message" => "Шаблон успешно создан.") );
             }
@@ -601,7 +602,7 @@
             )
             {
                 $query = "SELECT ".$permission." FROM permissions LEFT JOIN admins ON (permissions.id = admins.permission_id) WHERE admins.id = ".$session->get("user")["id"];
-                error_log($query);
+
                 $result = $this->mysqli->query( $query ) or die( $this->mysqli->error." - select permission error" );
                 $access = $result->fetch_row();
 
