@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 import mysql.connector
+import os
 
 server = "localhost"
 username = "ldap_squid"
@@ -60,6 +61,23 @@ def add_to_db( trafficArray ):
 
 file = open(pathLog, 'r', encoding="utf-8", errors="ignore")
 
+if os.path.exists('/tmp/sldap_poz.dat'):
+    poz_file = open('/tmp/sldap_poz.dat', 'r+')
+else:
+    poz_file = open('/tmp/sldap_poz.dat', 'w+')
+
+position = poz_file.readline()
+if position == '':
+    position = 0
+else:
+    position = int(position)
+
+if position > 0:
+    try:
+       file.seek(position)
+    except OSError:
+        position = 0
+
 trafficArray = []
 
 for line in file:
@@ -77,6 +95,12 @@ for line in file:
                     trafficArray.append( traffic )
     except:
         continue
+
+position = file.tell()
+poz_file.seek(0)
+poz_file.write(str(position))
+
+poz_file.close()
 file.close()
 
 add_to_db( trafficArray )
