@@ -580,6 +580,15 @@
             $statement->execute() or die( "не удалось выполнить обновление запрещенного(ых) сайта(ов) ".$statement->error );
         }
 
+        public function getAvailableTraffic($login)
+        {
+            $statement = $this->mysqli->prepare("SELECT trafficForDay FROM users WHERE login=?") or die ( "не удалось подготовить запрос: ".$this->mysqli->error );
+            $statement->bind_param('s', $login);
+            $statement->execute() or die( "не удалось получить траффик пользователя".$statement->error );
+            $availableTraffic = $statement->get_result()->fetch_row();
+            return $availableTraffic[0];
+        }
+
         private function checkPermissions($permission)
         {
             $session = new Session();

@@ -92,6 +92,8 @@ $app->get('/main', function() use ($app)
     }
 });
 
+$anonymousFunctions = ["getAvailableTraffic"];
+
 $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
 {
     $action = $request->get("action");
@@ -215,11 +217,24 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
     {
         return $mysql->applyChangesToAdmin($request->get("changes"));
     }
-})->before(function() use($app)
-{
-    if ( null === $user = $app['session']->get('user') )
+    elseif( $action === "getAvailableTraffic" )
     {
-        return $app->redirect('/');
+        return $mysql->getAvailableTraffic($request->get("login"));
+    }
+    else
+    {
+        return "Incorrect query!";
+    }
+})->before(function(Request $request) use($app, $anonymousFunctions)
+{
+    $action = $request->get("action");
+
+    if ( !in_array( $action, $anonymousFunctions ) )
+    {
+        if ( null === $user = $app['session']->get('user') )
+        {
+            return $app->redirect('/');
+        }
     }
 });
 

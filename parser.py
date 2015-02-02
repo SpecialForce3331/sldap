@@ -122,7 +122,7 @@ for row in result:
     last_update = row[0]
     current_traffic = row[1]
     login = row[2]
-    query = "SELECT SUM(bytes) FROM usersTraffic WHERE dateTime > %s AND login = %s"
+    query = "SELECT SUM(bytes) FROM usersTraffic WHERE dateTime > %s AND lower(login) = lower(%s)"
     conn, cursor = get_connection()
     cursor.execute(query, (last_update, login))
     row = cursor.fetchone()
@@ -137,7 +137,7 @@ for row in result:
 
         if traffic > 0:
             print(login)
-            query = "UPDATE users SET trafficForDay=%s, lastUpdate=%s WHERE login=%s"
+            query = "UPDATE users SET trafficForDay=%s, lastUpdate=%s WHERE lower(login)=lower(%s)"
             conn, cursor = get_connection()
             cursor.execute(query, (traffic, last_update, login))
             conn.commit()
