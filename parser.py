@@ -85,7 +85,7 @@ for line in file:
         parsed_row = line.split()
         for login in login_array:
             if len(parsed_row) >= 7:
-                if login[0] == parsed_row[7] and float(parsed_row[0]) > last_update:
+                if login[0].lower() == parsed_row[7].lower() and float(parsed_row[0]) > last_update:
                     traffic = []
 
                     traffic.append( parsed_row[7] )
