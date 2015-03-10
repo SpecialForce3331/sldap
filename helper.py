@@ -19,13 +19,13 @@ try:
             continue
         key, value = line.split(" : ")
         if key == "MYSQL_ip":
-            server = value
+            server = value.strip()
         elif key == "MYSQL_login":
-            username = value
+            username = value.strip()
         elif key == "MYSQL_password":
-            password = value
+            password = value.strip()
         elif key == "MYSQL_database":
-            database = value
+            database = value.strip()
 
     if not server or not username or not password or not database:
         exit("Config file is incorrect")
