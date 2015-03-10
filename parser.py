@@ -10,7 +10,8 @@ database = ""
 pathLog = ""
 
 try:
-    configFile = open("install/config.cfg", "r")
+    dir = os.path.dirname(os.path.realpath(__file__))
+    configFile = open(dir + "/install/config.cfg", "r")
     config = configFile.readlines()
 
     for line in config:
