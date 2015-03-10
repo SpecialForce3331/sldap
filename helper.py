@@ -3,15 +3,36 @@
 import mysql.connector
 import sys
 
-server = "localhost"
-username = "ldap_squid"
-password = "qwerty"
-database = "ldap_squid"
+server = ""
+username = ""
+password = ""
+database = ""
 
 try:
+    configFile = open("install/config.cfg", "r")
+    config = configFile.readlines()
+
+    for line in config:
+        if line.startswith("#") or line.startswith(" ") or line.startswith("\n"):
+            continue
+        key, value = line.split(" : ")
+        if key == "MYSQL_ip":
+            server = value
+        elif key == "MYSQL_login":
+            username = value
+        elif key == "MYSQL_password":
+            password = value
+        elif key == "MYSQL_database":
+            database = value
+
+    if not server or not username or not password or not database:
+        exit("Config file is incorrect")
+
     conn = mysql.connector.connect(user=username, password=password, host=server, database=database)
-except:
-    exit("Can't connect to Mysql Server")
+except FileNotFoundError:
+    exit("Config file not found")
+except mysql.connector.Error:
+    exit("Can't connect to mysql server or database")
 
 
 def get_connection(conn):
