@@ -42,7 +42,7 @@
             auth_param basic credentialsttl 5 hours
 
             acl users proxy_auth REQUIRED
-            external_acl_type accessCheck ttl=0 %LOGIN %URI python3.4 '.$checkConf->sldapDirectory.'/helper.py
+            external_acl_type accessCheck ttl=0 %URI %LOGIN python3.4 '.$checkConf->sldapDirectory.'/helper.py
             acl allowUsers external accessCheck
 
             acl all src 0.0.0.0/0
