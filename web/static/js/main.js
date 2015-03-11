@@ -649,7 +649,7 @@ function getTopList(type, count, fromDate, toDate, login)
 
     sendAJAXCommand("/api",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate, login: login}, function(data)
     {
-        $("#loading").hide();
+        $("#loading-container").show();
         $("#main").append("<table id='topStats'></table>");
         $("#topStats").append("" +
             "<thead>" +
@@ -671,6 +671,7 @@ function getTopList(type, count, fromDate, toDate, login)
 
         $("#topStats").append("</tbody>");
         applyStyleForTable($("#topStats"));
+        $("#loading-container").hide();
     }, true);
 }
 
