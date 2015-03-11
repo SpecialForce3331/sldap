@@ -647,8 +647,6 @@ function getTopList(type, count, fromDate, toDate, login)
     $("#main").empty();
     $("#panel").empty();
 
-    $("#main").append("<div id='loading'>Подождите, идет загрузка...</div>");
-
     sendAJAXCommand("/api",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate, login: login}, function(data)
     {
         $("#loading").hide();
@@ -1095,7 +1093,7 @@ function sendAJAXCommand(url, params, callbackFunction, needData)
             }
 
         }
-        $("#loading-container").hide();
+        $("#loading-container").hide();ssh
     },"json");
 }
 
