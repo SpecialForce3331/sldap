@@ -1093,7 +1093,7 @@ function sendAJAXCommand(url, params, callbackFunction, needData)
             }
 
         }
-        $("#loading-container").hide();ssh
+        $("#loading-container").hide();
     },"json");
 }
 
