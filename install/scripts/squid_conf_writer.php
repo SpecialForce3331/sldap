@@ -31,6 +31,7 @@
 
 
             access_log '.$checkConf->SquidLogfile.' squid
+            dns_v4_first on
 			';
     }
     else
@@ -55,6 +56,7 @@
             visible_hostname squid
 
             access_log '.$checkConf->SquidLogfile.' squid
+            dns_v4_first on
             ';
     }
 

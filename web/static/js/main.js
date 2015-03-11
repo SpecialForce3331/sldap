@@ -1074,6 +1074,8 @@ function applyChangesToPermissions()
 
 function sendAJAXCommand(url, params, callbackFunction, needData)
 {
+    $("#loading-container").show();
+
     $.post(url, params, function( data )
     {
         if ( data.message && data.message.length > 0 )
@@ -1093,6 +1095,7 @@ function sendAJAXCommand(url, params, callbackFunction, needData)
             }
 
         }
+        $("#loading-container").hide();
     },"json");
 }
 

@@ -3,6 +3,109 @@
 #selectable-menu { list-style-type: none; margin: 0; margin-top: 100px; padding: 0; width: 20%; float: left; }
 #selectable-menu li { margin: 3px; padding: 0.4em; font-size: 1.0em; height: 20px; cursor: pointer; }
 
+#loading-container {
+    display: none;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#loading {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #CCFFFF;
+    opacity: 0.8;
+    z-index: 500;
+}
+.spinner {
+    display: block;
+    width: 35px;
+    height: 35px;
+    position: relative;
+    z-index: 900;
+
+    border: 2px solid rgba(0,0,0,0.5);
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-radius: 100%;
+
+    -webkit-animation: spin 1s infinite linear;
+    -moz-animation: spin 1s infinite linear;
+    -ms-animation: spin 1s infinite linear;
+    -o-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+
+    margin-left: auto;
+    margin-right: auto;
+    top: 40%;
+}
+
+.spinner:after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: -6px;
+    left: 3px;
+
+    border: 6px solid transparent;
+    border-bottom-color: rgba(0,0,0,0.5);
+
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.spinner:before {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    bottom: -6px;
+    right: 3px;
+
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.5);
+
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+@-webkit-keyframes spin {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes spin {
+    to { -moz-transform: rotate(360deg); }
+}
+
+@-ms-keyframes spin {
+    to { -ms-transform: rotate(360deg); }
+}
+
+@-o-keyframes spin {
+    to { -o-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 #main {
 	overflow-y:auto;
 	margin-right: 100px;
