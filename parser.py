@@ -13,6 +13,7 @@ try:
     dir = os.path.dirname(os.path.realpath(__file__))
     configFile = open(dir + "/install/config.cfg", "r")
     config = configFile.readlines()
+    configFile.close()
 
     for line in config:
         if line.startswith("#") or line.startswith(" ") or line.startswith("\n"):
