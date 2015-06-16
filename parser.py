@@ -96,14 +96,14 @@ else:
     poz_file = open('/tmp/sldap_poz.dat', 'w+')
 
 position = poz_file.readline()
-if position == '':
+if position == '' or position > os.stat(pathLog).st_size:
     position = 0
 else:
     position = int(position)
 
 if position > 0:
     try:
-       file.seek(position)
+        file.seek(position)
     except OSError:
         position = 0
 
