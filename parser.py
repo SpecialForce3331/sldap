@@ -99,7 +99,7 @@ else:
     poz_file = open('/tmp/sldap_poz.dat', 'w+')
 
 position = poz_file.readline()
-if position == '' or position > os.stat(pathLog).st_size:
+if position == '' or int(position) > os.stat(pathLog).st_size:
     position = 0
 else:
     position = int(position)
