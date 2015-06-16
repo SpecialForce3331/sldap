@@ -47,6 +47,9 @@ def get_connection():
 
     try:
         if not conn.is_connected():
+            cursor.close()
+            conn.close()
+
             conn.reconnect()
             cursor = conn.cursor()
             return conn, cursor
@@ -132,7 +135,7 @@ poz_file.write(str(position))
 poz_file.close()
 file.close()
 
-add_to_db( trafficArray )
+add_to_db(trafficArray)
 
 query = "SELECT lastUpdate,trafficForDay,login FROM users WHERE login IN ("
 
