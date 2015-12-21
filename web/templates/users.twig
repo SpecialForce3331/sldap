@@ -1,0 +1,38 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <div ng-controller="UserTraffic">
+        <h3>Пользователи прокси сервера</h3>
+
+        <div>Поиск:<input ng-model="search"><br>
+
+        <table cellspacing='10' id='users'>
+            <thead>
+                <tr>
+                    <td>[]</td>
+                    <td><a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">ФИО Пользователя</a></td>
+                    <td><a href="#" ng-click="sortType = 'login'; sortReverse = !sortReverse">Логин</a></td>
+                    <td><a href="#" ng-click="sortType = 'userTraffic'; sortReverse = !sortReverse">Потребленный траффик (Мбайт)</a></td>
+                    <td><a href="#" ng-click="sortType = 'allowedTraffic'; sortReverse = !sortReverse">Разрешенный траффик (Мбайт)</a></td>
+                    <td><a href="#" ng-click="sortType = 'pattern'; sortReverse = !sortReverse">Примененный шаблон</a></td>
+                    <td><a href="#"d ng-click="sortType = 'accessToDenySites'; sortReverse = !sortReverse">Доступ к запрещенным сайтам</a></td>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr ng-repeat="user in users | orderBy:sortType:sortReverse | filter:search">
+                    {% verbatim %}
+                        <td><input type="checkbox"/></td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.login }}</td>
+                        <td>{{ user.userTraffic }}</td>
+                        <td>{{ user.allowedTraffic }}</td>
+                        <td>{{ user.pattern }}</td>
+                        <td>{{ user.accessToDenySites }}</td>
+                    {% endverbatim %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+{% endblock %}

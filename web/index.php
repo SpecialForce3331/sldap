@@ -30,15 +30,20 @@ if (php_sapi_name() === 'cli-server' && is_file($filename)) {
 }
 
 $app = new Silex\Application();
-$app['debug'] = false;
+$app['debug'] = true;
 $app->register(new Silex\Provider\SessionServiceProvider());
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
-    'twig.path' => __DIR__.'/views',
+    'twig.path' => __DIR__.'/templates',
 ));
 
 $app->get('/', function() use ($app, $error, $ldap)
 {
     return $app['twig']->render('index.html');
+});
+
+$app->get('/users', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('users.twig');
 });
 
 $app->get('/error', function(Request $request) use ($app)

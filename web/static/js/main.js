@@ -1,26 +1,27 @@
+var scopeAccess;
+
+var myApp = angular.module('myApp',[]);
+myApp.controller('UserTraffic', function($scope) {
+    $scope.users = [{name: 2, login: 3, userTraffic: 4, allowedTraffic: 5, pattern: 6, accessToDenySites: 7}];
+    scopeAccess = $scope;
+    $scope.sortType = "name";
+    $scope.sortReverse = false;
+    $scope.selectedUsers = [];
+});
+
 function getMysqlUsers() //получаем пользователей из БД MySQL
 {
     sendAJAXCommand("/api",{action: "getMysqlUsers"}, function(data){
-
-        $("#main").empty();
-        $("#main").append("<h3>Пользователи прокси сервера</h3>");
-        $("#main").append("<table cellspacing='10' id='users'><thead>" +
-            "<tr>" +
-            "<td>[]</td>" +
-            "<td>ФИО Пользователя</td>" +
-            "<td>Логин</td>" +
-            "<td>Потребленный траффик (Мбайт)</td>" +
-            "<td>Разрешенный траффик (Мбайт)</td>" +
-            "<td>Примененный шаблон</td>" +
-            "<td>Доступ к запрещенным сайтам</td>" +
-            "</tr>" +
-            "</thead><tbody></table>");
 
         var access;
         var allowTraffic;
 
         for ( var i = 0; i < data.result.length; i++ ) //парсим ответ
         {
+            var name = data.result[i][1];
+            var login = data.result[i][0];
+            var userTraffic = parseFloat(data.result[i][2]);
+            var pattern = data.result[i][4];
 
             if ( data.result[i][5] != 0 ) //вместо 0 и 1 выводим словами
             {
@@ -39,19 +40,11 @@ function getMysqlUsers() //получаем пользователей из БД
                 allowTraffic = data.result[i][3];
             }
 
-            $("#users").append("<tr>" +
-                "<span>" +
-                "<td><input type='checkbox'/></td>" +
-                "<td width='40%'>" + data.result[i][1] + " </td>" + 	//ФИО
-                "<td>" + data.result[i][0] + "</td>" + 					//Логин
-                "<td>" + data.result[i][2] + "</td>" + 					//Потребленный траффик
-                "<td>" + allowTraffic + "</td>" +						//Разрешенный траффик
-                "<td>" + data.result[i][4] + "</td>" +					//Примененный шаблон
-                "<td>" + access + "</td>" +								//Доступ к запрещенным сайтам
-                "</span></tr>");
+            scopeAccess.$apply(function(){
+                scopeAccess.users.push({name: name, login: login, userTraffic: userTraffic, allowedTraffic: allowTraffic, pattern: pattern, accessToDenySites: access})
+            });
+
         }
-        $("#users").append("</tbody>");
-        applyStyleForTable($("#users"));
 
         $("#panel").empty();
         $("#panel").append("" +
@@ -105,7 +98,6 @@ function getLdapUsers(type) //получаем список пользовате
         }
         $("#ldapUsers").append("</tbody>");
         getPatternsForList();
-        applyStyleForTable($("#ldapUsers"));
 
         $("#panel").append("<button onclick='selectAll()'>Выбрать всех</button><button onclick='cleanSelectAll()'>Снять выбор со всех</button><button onclick='doWithUsers(\"addUsers\")'>Добавить</button>");
 
@@ -202,7 +194,6 @@ function getPatterns() // получаем шаблоны из БД и отоб�
             "<button onclick='deletePattern()'>Удалить</button>" +
             "");
 
-        applyStyleForTable($("#patterns"));
     }, true);
 
 
@@ -246,7 +237,6 @@ function getDenySites() // получаем список запрещенных 
         }
 
         $("#denySites").append("</tbody>");
-        applyStyleForTable($("#denySites"));
 
         $("#panel").append("" +
             "<button onclick='selectAll()'>Выбрать все</button>" +
@@ -383,7 +373,6 @@ function showEditUsers() //отображаем форму для редакти
 							"</tr>");
 				}
             $("#editUsers").append("</tbody></table>");
-            applyStyleForTable($("#editUsers"));
 			$("#panel").append("" +
 					"<button onclick='applyChangesToUsers()'>Применить изменения</button>" +
 					"<button onclick='getMysqlUsers()'>Отмена</button>");
@@ -594,17 +583,6 @@ function cleanSelectAll()
         }
 }
 
-//Передается jquery объект таблицы
-function applyStyleForTable(table) {
-    table.dataTable( {
-        "scrollY":        "450px",
-        "scrollCollapse": true,
-        "paging":         false,
-        "language": {"url": "/static/DataTables-1.10.0/russian.lang"},
-        "bRetrieve": true
-    } );
-}
-
 var maxStatisticRecords = 15;
 
 function showStatistic()
@@ -669,7 +647,6 @@ function getTopList(type, count, fromDate, toDate, login)
         }
 
         $("#topStats").append("</tbody>");
-        applyStyleForTable($("#topStats"));
     }, true);
 }
 
@@ -693,7 +670,6 @@ function selectUserFromPopupUserList()
 
         $("#user_table").append("</tbody>");
 
-        applyStyleForTable($("#user_table"));
 
         $("#userList").dialog({
             width: 500,
@@ -765,7 +741,6 @@ function selectAdminsFromPopupList()
             });
         });
 
-        applyStyleForTable($("#admin_table"));
 
         $("#adminList").dialog({
             width: 500,
@@ -835,7 +810,6 @@ function showAdmins()
         }
 
         $("#admins").append("</tbody>");
-        applyStyleForTable( $("#admins") );
     }, true);
 
     $("#panel").append("" +

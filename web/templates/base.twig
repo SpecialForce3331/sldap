@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="static/js/jquery-1.11.1.min.js"></script>
+        <script type="text/javascript" src="static/js/angular.min.js"></script>
+        <script type="text/javascript" src="static/js/datepicker.ru.js"></script>
+        <script type="text/javascript" src="static/js/main.js"></script>
+        <link rel="stylesheet" href="static/css/main.css" />
+    </head>
+    <body ng-app="myApp">
+
+    <div id="loading-container">
+        <div id="loading"></div>
+        <div class="spinner"></div>
+    </div>
+
+    <ul id="selectable-menu">
+        <li>
+            <div class="cancel" onclick="getMysqlUsers()">Пользователи</div>
+        </li>
+        <li>
+            <div onclick="getLdapUsers('users')">Добавить пользователей</div>
+        </li>
+        <li>
+            <div onclick="getDenySites()">Список запрещенных сайтов</div>
+        </li>
+        <li>
+            <div onclick="getPatterns()">Шаблоны</div>
+        </li>
+        <li>
+            <div onclick="showStatistic()">Статистика</div>
+        </li>
+        <li>
+            <div onclick="showPreferences()">Настройки</div>
+        </li>
+    </ul>
+
+    <div id="main">
+        {% block content %}{% endblock %}
+    </div>
+    <div id="panel"></div>
+
+    </body>
+</html>
