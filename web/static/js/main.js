@@ -2,7 +2,7 @@ var scopeAccess;
 
 var myApp = angular.module('myApp',[]);
 myApp.controller('UserTraffic', function($scope) {
-    $scope.users = [{name: 2, login: 3, userTraffic: 4, allowedTraffic: 5, pattern: 6, accessToDenySites: 7}];
+    $scope.users = [];
     scopeAccess = $scope;
     $scope.sortType = "name";
     $scope.sortReverse = false;

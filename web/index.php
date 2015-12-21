@@ -236,10 +236,10 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
 
     if ( !in_array( $action, $anonymousFunctions ) )
     {
-        if ( null === $user = $app['session']->get('user') )
-        {
-            return $app->redirect('/');
-        }
+//        if ( null === $user = $app['session']->get('user') )
+//        {
+//            return $app->redirect('/');
+//        }
     }
 });
 

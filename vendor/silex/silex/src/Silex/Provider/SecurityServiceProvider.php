@@ -15,6 +15,7 @@ use Silex\Application;
 use Silex\ServiceProviderInterface;
 use Symfony\Component\HttpFoundation\RequestMatcher;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\SecurityContext;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\User\UserChecker;
@@ -27,6 +28,8 @@ use Symfony\Component\Security\Core\Authentication\AuthenticationProviderManager
 use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolver;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationSuccessHandler;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleHierarchyVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
@@ -72,9 +75,43 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.access_rules'] = array();
         $app['security.hide_user_not_found'] = true;
 
-        $app['security'] = $app->share(function ($app) {
-            return new SecurityContext($app['security.authentication_manager'], $app['security.access_manager']);
-        });
+        $r = new \ReflectionMethod('Symfony\Component\Security\Http\Firewall\ContextListener', '__construct');
+        $params = $r->getParameters();
+        if ('Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface' === $params[0]->getClass()->getName()) {
+            $app['security.authorization_checker'] = $app->share(function ($app) {
+                return new AuthorizationChecker($app['security.token_storage'], $app['security.authentication_manager'], $app['security.access_manager']);
+            });
+
+            $app['security.token_storage'] = $app->share(function ($app) {
+                return new TokenStorage();
+            });
+
+            $app['security'] = $app->share(function ($app) {
+                // Deprecated, to be removed in 2.0
+                return new SecurityContext($app['security.token_storage'], $app['security.authorization_checker']);
+            });
+        } else {
+            $app['security.token_storage'] = $app['security.authorization_checker'] = $app->share(function ($app) {
+                return $app['security'];
+            });
+
+            $app['security'] = $app->share(function ($app) {
+                // Deprecated, to be removed in 2.0
+                return new SecurityContext($app['security.authentication_manager'], $app['security.access_manager']);
+            });
+        }
+
+        $app['user'] = function ($app) {
+            if (null === $token = $app['security.token_storage']->getToken()) {
+                return;
+            }
+
+            if (!is_object($user = $token->getUser())) {
+                return;
+            }
+
+            return $user;
+        };
 
         $app['security.authentication_manager'] = $app->share(function ($app) {
             $manager = new AuthenticationProviderManager($app['security.authentication_providers']);
@@ -148,7 +185,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
                     'security.authentication_provider.'.$name.'.'.$provider,
                     'security.authentication_listener.'.$name.'.'.$type,
                     $entryPoint ? 'security.entry_point.'.$name.'.'.$entryPoint : null,
-                    $type
+                    $type,
                 );
             });
         }
@@ -161,9 +198,10 @@ class SecurityServiceProvider implements ServiceProviderInterface
                 $entryPoint = null;
                 $pattern = isset($firewall['pattern']) ? $firewall['pattern'] : null;
                 $users = isset($firewall['users']) ? $firewall['users'] : array();
-                $security = isset($firewall['security']) ? (Boolean) $firewall['security'] : true;
-                $stateless = isset($firewall['stateless']) ? (Boolean) $firewall['stateless'] : false;
-                unset($firewall['pattern'], $firewall['users'], $firewall['security'], $firewall['stateless']);
+                $security = isset($firewall['security']) ? (bool) $firewall['security'] : true;
+                $stateless = isset($firewall['stateless']) ? (bool) $firewall['stateless'] : false;
+                $context = isset($firewall['context']) ? $firewall['context'] : $name;
+                unset($firewall['pattern'], $firewall['users'], $firewall['security'], $firewall['stateless'], $firewall['context']);
 
                 $protected = false === $security ? false : count($firewall);
 
@@ -179,7 +217,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
                     }
 
                     if (false === $stateless) {
-                        $listeners[] = 'security.context_listener.'.$name;
+                        $listeners[] = 'security.context_listener.'.$context;
                     }
 
                     $factories = array();
@@ -204,6 +242,8 @@ class SecurityServiceProvider implements ServiceProviderInterface
                         if (!isset($app['security.authentication_listener.factory.'.$type])) {
                             throw new \LogicException(sprintf('The "%s" authentication entry is not registered.', $type));
                         }
+
+                        $options['stateless'] = $stateless;
 
                         list($providerId, $listenerId, $entryPointId, $position) = $app['security.authentication_listener.factory.'.$type]($name, $options);
 
@@ -271,7 +311,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
 
         $app['security.access_listener'] = $app->share(function ($app) {
             return new AccessListener(
-                $app['security'],
+                $app['security.token_storage'],
                 $app['security.access_manager'],
                 $app['security.access_map'],
                 $app['security.authentication_manager'],
@@ -298,7 +338,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         });
 
         $app['security.session_strategy'] = $app->share(function ($app) {
-            return new SessionAuthenticationStrategy('migrate');
+            return new SessionAuthenticationStrategy(SessionAuthenticationStrategy::MIGRATE);
         });
 
         $app['security.http_utils'] = $app->share(function ($app) {
@@ -306,14 +346,19 @@ class SecurityServiceProvider implements ServiceProviderInterface
         });
 
         $app['security.last_error'] = $app->protect(function (Request $request) {
-            if ($request->attributes->has(SecurityContextInterface::AUTHENTICATION_ERROR)) {
-                return $request->attributes->get(SecurityContextInterface::AUTHENTICATION_ERROR)->getMessage();
+            if (class_exists('Symfony\Component\Security\Core\Security')) {
+                $error = Security::AUTHENTICATION_ERROR;
+            } else {
+                $error = SecurityContextInterface::AUTHENTICATION_ERROR;
+            }
+            if ($request->attributes->has($error)) {
+                return $request->attributes->get($error)->getMessage();
             }
 
             $session = $request->getSession();
-            if ($session && $session->has(SecurityContextInterface::AUTHENTICATION_ERROR)) {
-                $error = $session->get(SecurityContextInterface::AUTHENTICATION_ERROR)->getMessage();
-                $session->remove(SecurityContextInterface::AUTHENTICATION_ERROR);
+            if ($session && $session->has($error)) {
+                $error = $session->get($error)->getMessage();
+                $session->remove($error);
 
                 return $error;
             }
@@ -324,7 +369,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.context_listener._proto'] = $app->protect(function ($providerKey, $userProviders) use ($app) {
             return $app->share(function () use ($app, $userProviders, $providerKey) {
                 return new ContextListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $userProviders,
                     $providerKey,
                     $app['logger'],
@@ -347,7 +392,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.exception_listener._proto'] = $app->protect(function ($entryPoint, $name) use ($app) {
             return $app->share(function () use ($app, $entryPoint, $name) {
                 return new ExceptionListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $app['security.trust_resolver'],
                     $app['security.http_utils'],
                     $name,
@@ -401,7 +446,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
                 }
 
                 return new $class(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $app['security.authentication_manager'],
                     isset($app['security.session_strategy.'.$name]) ? $app['security.session_strategy.'.$name] : $app['security.session_strategy'],
                     $app['security.http_utils'],
@@ -419,7 +464,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.authentication_listener.http._proto'] = $app->protect(function ($providerKey, $options) use ($app) {
             return $app->share(function () use ($app, $providerKey, $options) {
                 return new BasicAuthenticationListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $app['security.authentication_manager'],
                     $providerKey,
                     $app['security.entry_point.'.$providerKey.'.http'],
@@ -431,7 +476,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.authentication_listener.anonymous._proto'] = $app->protect(function ($providerKey, $options) use ($app) {
             return $app->share(function () use ($app, $providerKey, $options) {
                 return new AnonymousAuthenticationListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $providerKey,
                     $app['logger']
                 );
@@ -460,14 +505,17 @@ class SecurityServiceProvider implements ServiceProviderInterface
                 }
 
                 $listener = new LogoutListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $app['security.http_utils'],
                     $app['security.authentication.logout_handler.'.$name],
                     $options,
                     isset($options['with_csrf']) && $options['with_csrf'] && isset($app['form.csrf_provider']) ? $app['form.csrf_provider'] : null
                 );
 
-                $listener->addHandler(new SessionLogoutHandler());
+                $invalidateSession = isset($options['invalidate_session']) ? $options['invalidate_session'] : true;
+                if (true === $invalidateSession && false === $options['stateless']) {
+                    $listener->addHandler(new SessionLogoutHandler());
+                }
 
                 return $listener;
             });
@@ -476,7 +524,7 @@ class SecurityServiceProvider implements ServiceProviderInterface
         $app['security.authentication_listener.switch_user._proto'] = $app->protect(function ($name, $options) use ($app, $that) {
             return $app->share(function () use ($app, $name, $options, $that) {
                 return new SwitchUserListener(
-                    $app['security'],
+                    $app['security.token_storage'],
                     $app['security.user_provider.'.$name],
                     $app['security.user_checker'],
                     $name,
@@ -524,12 +572,8 @@ class SecurityServiceProvider implements ServiceProviderInterface
 
         if (isset($app['validator'])) {
             $app['security.validator.user_password_validator'] = $app->share(function ($app) {
-                return new UserPasswordValidator($app['security'], $app['security.encoder_factory']);
+                return new UserPasswordValidator($app['security.token_storage'], $app['security.encoder_factory']);
             });
-
-            if (!isset($app['validator.validator_service_ids'])) {
-                $app['validator.validator_service_ids'] = array();
-            }
 
             $app['validator.validator_service_ids'] = array_merge($app['validator.validator_service_ids'], array('security.validator.user_password' => 'security.validator.user_password_validator'));
         }

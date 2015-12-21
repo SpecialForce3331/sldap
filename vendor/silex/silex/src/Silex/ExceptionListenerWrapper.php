@@ -16,7 +16,6 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
-use Silex\Application;
 
 /**
  * Wraps exception listeners.
@@ -31,7 +30,8 @@ class ExceptionListenerWrapper
     /**
      * Constructor.
      *
-     * @param Application $app An Application instance
+     * @param Application $app      An Application instance
+     * @param callable    $callback
      */
     public function __construct(Application $app, $callback)
     {

@@ -14,10 +14,10 @@ namespace Silex\Provider;
 use Silex\Application;
 use Silex\ServiceProviderInterface;
 use Silex\ConstraintValidatorFactory;
-use Symfony\Component\Validator\Validator;
-use Symfony\Component\Validator\DefaultTranslator;
 use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
+use Symfony\Component\Validator\Mapping\Factory\LazyLoadingMetadataFactory;
 use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
+use Symfony\Component\Validator\Validation;
 
 /**
  * Symfony Validator component Provider.
@@ -29,33 +29,39 @@ class ValidatorServiceProvider implements ServiceProviderInterface
     public function register(Application $app)
     {
         $app['validator'] = $app->share(function ($app) {
+            return $app['validator.builder']->getValidator();
+        });
+
+        $app['validator.builder'] = $app->share(function ($app) {
+            $builder = Validation::createValidatorBuilder();
+            $builder->setConstraintValidatorFactory($app['validator.validator_factory']);
+            $builder->setTranslationDomain('validators');
+            $builder->addObjectInitializers($app['validator.object_initializers']);
+            $builder->setMetadataFactory($app['validator.mapping.class_metadata_factory']);
             if (isset($app['translator'])) {
-                $r = new \ReflectionClass('Symfony\Component\Validator\Validator');
-                $app['translator']->addResource('xliff', dirname($r->getFilename()).'/Resources/translations/validators.'.$app['locale'].'.xlf', $app['locale'], 'validators');
+                $builder->setTranslator($app['translator']);
             }
 
-            return new Validator(
-                $app['validator.mapping.class_metadata_factory'],
-                $app['validator.validator_factory'],
-                isset($app['translator']) ? $app['translator'] : new DefaultTranslator(),
-                'validators',
-                $app['validator.object_initializers']
-            );
+            return $builder;
         });
 
         $app['validator.mapping.class_metadata_factory'] = $app->share(function ($app) {
+            if (class_exists('Symfony\Component\Validator\Mapping\Factory\LazyLoadingMetadataFactory')) {
+                return new LazyLoadingMetadataFactory(new StaticMethodLoader());
+            }
+
             return new ClassMetadataFactory(new StaticMethodLoader());
         });
 
         $app['validator.validator_factory'] = $app->share(function () use ($app) {
-            $validators = isset($app['validator.validator_service_ids']) ? $app['validator.validator_service_ids'] : array();
-
-            return new ConstraintValidatorFactory($app, $validators);
+            return new ConstraintValidatorFactory($app, $app['validator.validator_service_ids']);
         });
 
         $app['validator.object_initializers'] = $app->share(function ($app) {
             return array();
         });
+
+        $app['validator.validator_service_ids'] = array();
     }
 
     public function boot(Application $app)

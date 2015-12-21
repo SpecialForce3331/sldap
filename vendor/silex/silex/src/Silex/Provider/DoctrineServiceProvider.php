@@ -28,12 +28,11 @@ class DoctrineServiceProvider implements ServiceProviderInterface
     public function register(Application $app)
     {
         $app['db.default_options'] = array(
-            'driver'   => 'pdo_mysql',
-            'dbname'   => null,
-            'host'     => 'localhost',
-            'user'     => 'root',
+            'driver' => 'pdo_mysql',
+            'dbname' => null,
+            'host' => 'localhost',
+            'user' => 'root',
             'password' => null,
-            'port'     => null,
         );
 
         $app['dbs.options.initializer'] = $app->protect(function () use ($app) {

@@ -24,14 +24,14 @@ use Symfony\Component\HttpFoundation\Request;
  * __call() forwards method-calls to Route, but returns instance of ControllerCollection
  * listing Route's methods below, so that IDEs know they are valid
  *
- * @method \Silex\ControllerCollection assert(string $variable, string $regexp)
- * @method \Silex\ControllerCollection value(string $variable, mixed $default)
- * @method \Silex\ControllerCollection convert(string $variable, mixed $callback)
- * @method \Silex\ControllerCollection method(string $method)
- * @method \Silex\ControllerCollection requireHttp()
- * @method \Silex\ControllerCollection requireHttps()
- * @method \Silex\ControllerCollection before(mixed $callback)
- * @method \Silex\ControllerCollection after(mixed $callback)
+ * @method ControllerCollection assert(string $variable, string $regexp)
+ * @method ControllerCollection value(string $variable, mixed $default)
+ * @method ControllerCollection convert(string $variable, mixed $callback)
+ * @method ControllerCollection method(string $method)
+ * @method ControllerCollection requireHttp()
+ * @method ControllerCollection requireHttps()
+ * @method ControllerCollection before(mixed $callback)
+ * @method ControllerCollection after(mixed $callback)
  *
  * @author Igor Wiedler <igor@wiedler.ch>
  * @author Fabien Potencier <fabien@symfony.com>
@@ -43,9 +43,6 @@ class ControllerCollection
     protected $defaultController;
     protected $prefix;
 
-    /**
-     * Constructor.
-     */
     public function __construct(Route $defaultRoute)
     {
         $this->defaultRoute = $defaultRoute;
@@ -140,6 +137,19 @@ class ControllerCollection
     }
 
     /**
+     * Maps an OPTIONS request to a callable.
+     *
+     * @param string $pattern Matched route pattern
+     * @param mixed  $to      Callback that returns the response when matched
+     *
+     * @return Controller
+     */
+    public function options($pattern, $to = null)
+    {
+        return $this->match($pattern, $to)->method('OPTIONS');
+    }
+
+    /**
      * Maps a PATCH request to a callable.
      *
      * @param string $pattern Matched route pattern
@@ -178,12 +188,20 @@ class ControllerCollection
      */
     public function flush($prefix = '')
     {
-        $routes = new RouteCollection();
+        return $this->doFlush($prefix, new RouteCollection());
+    }
+
+    private function doFlush($prefix, RouteCollection $routes)
+    {
+        if ($prefix !== '') {
+            $prefix = '/'.trim(trim($prefix), '/');
+        }
 
         foreach ($this->controllers as $controller) {
             if ($controller instanceof Controller) {
+                $controller->getRoute()->setPath($prefix.$controller->getRoute()->getPath());
                 if (!$name = $controller->getRouteName()) {
-                    $name = $controller->generateRouteName($prefix);
+                    $name = $controller->generateRouteName('');
                     while ($routes->get($name)) {
                         $name .= '_';
                     }
@@ -192,11 +210,9 @@ class ControllerCollection
                 $routes->add($name, $controller->getRoute());
                 $controller->freeze();
             } else {
-                $routes->addCollection($controller->flush($controller->prefix));
+                $controller->doFlush($prefix.$controller->prefix, $routes);
             }
         }
-
-        $routes->addPrefix($prefix);
 
         $this->controllers = array();
 

@@ -53,7 +53,7 @@ class ApcCache extends CacheProvider
      */
     protected function doSave($id, $data, $lifeTime = 0)
     {
-        return (bool) apc_store($id, $data, (int) $lifeTime);
+        return apc_store($id, $data, $lifeTime);
     }
 
     /**
@@ -61,7 +61,8 @@ class ApcCache extends CacheProvider
      */
     protected function doDelete($id)
     {
-        return apc_delete($id);
+        // apc_delete returns false if the id does not exist
+        return apc_delete($id) || ! apc_exists($id);
     }
 
     /**
@@ -75,9 +76,17 @@ class ApcCache extends CacheProvider
     /**
      * {@inheritdoc}
      */
+    protected function doFetchMultiple(array $keys)
+    {
+        return apc_fetch($keys);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function doGetStats()
     {
-        $info = apc_cache_info();
+        $info = apc_cache_info('', true);
         $sma  = apc_sma_info();
 
         // @TODO - Temporary fix @see https://github.com/krakjoe/apcu/pull/42

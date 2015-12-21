@@ -9,9 +9,9 @@
  */
 
 /**
- * Listens for exceptions thrown from within the Transport system.
+ * Listens for Exceptions thrown from within the Transport system.
  *
- * @author     Chris Corbyn
+ * @author Chris Corbyn
  */
 interface Swift_Events_TransportExceptionListener extends Swift_Events_EventListener
 {

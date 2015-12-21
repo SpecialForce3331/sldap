@@ -21,7 +21,7 @@ use Symfony\Component\Form\FormBuilder;
 trait FormTrait
 {
     /**
-     * Creates and returns a form builder instance
+     * Creates and returns a form builder instance.
      *
      * @param mixed $data    The initial data for the form
      * @param array $options Options for the form
@@ -30,6 +30,12 @@ trait FormTrait
      */
     public function form($data = null, array $options = array())
     {
-        return $this['form.factory']->createBuilder('form', $data, $options);
+        $name = 'Symfony\Component\Form\Extension\Core\Type\FormType';
+        // for BC with Symfony pre 2.7
+        if (!class_exists('Symfony\Component\Form\Extension\Core\Type\RangeType')) {
+            $name = 'form';
+        }
+
+        return $this['form.factory']->createBuilder($name, $data, $options);
     }
 }
