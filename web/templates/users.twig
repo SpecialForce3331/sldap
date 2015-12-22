@@ -22,7 +22,7 @@
             <tbody>
                 <tr ng-repeat="user in users | orderBy:sortType:sortReverse | filter:search">
                     {% verbatim %}
-                        <td><input type="checkbox"/></td>
+                        <td><input type="checkbox" ng-click="switchSelectedUser(user.login)" /></td>
                         <td>{{ user.name }}</td>
                         <td>{{ user.login }}</td>
                         <td>{{ user.userTraffic }}</td>
@@ -35,4 +35,13 @@
         </table>
     </div>
     
+{% endblock %}
+
+{% block panel %}
+        <button onclick='selectAll()'>Выбрать всех</button>
+        <button onclick='cleanSelectAll()'>Снять выбор со всех</button>
+        <button onclick='doWithUsers("cleanTraffic", scopeAccess.selectedUsers)'>Обнулить траффик</button>
+        <button onclick='doWithUsers("deleteUsers", scopeAccess.selectedUsers)'>Удалить</button>
+        <button onclick='applyPatternToUsers()'>Применить шаблон на выбранных пользователей: </button>
+        <select class='patterns'></select>
 {% endblock %}

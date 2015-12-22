@@ -7,6 +7,19 @@ myApp.controller('UserTraffic', function($scope) {
     $scope.sortType = "name";
     $scope.sortReverse = false;
     $scope.selectedUsers = [];
+
+    $scope.switchSelectedUser = function(user)
+    {
+        var index = $scope.selectedUsers.indexOf(user);
+
+        if( index === -1 ) {
+            $scope.selectedUsers.push(user);
+        }
+        else
+        {
+            $scope.selectedUsers.splice(index,1);
+        }
+    }
 });
 
 function getMysqlUsers() //получаем пользователей из БД MySQL
@@ -15,6 +28,10 @@ function getMysqlUsers() //получаем пользователей из БД
 
         var access;
         var allowTraffic;
+
+        scopeAccess.$apply(function(){
+            scopeAccess.users = [];
+        });
 
         for ( var i = 0; i < data.result.length; i++ ) //парсим ответ
         {
@@ -46,18 +63,6 @@ function getMysqlUsers() //получаем пользователей из БД
 
         }
 
-        $("#panel").empty();
-        $("#panel").append("" +
-            "<button onclick='selectAll()'>Выбрать всех</button>" +
-            "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>");
-        $("#panel").append("" +
-            "<button onclick='doWithUsers(\"cleanTraffic\")'>Обнулить траффик</button>" +
-            //"<button onclick='showEditUsers()'>Изменить</button>" +
-            "<button onclick='doWithUsers(\"deleteUsers\")'>Удалить</button>");
-        $("#panel").append("<br>" +
-            "<button onclick='appyPatternToUsers()'>Применить шаблон на выбранных пользователей: </button>" +
-            "<select class='patterns'>" +
-            "</select");
         getPatternsForList();
     }, true);
 }
@@ -104,23 +109,12 @@ function getLdapUsers(type) //получаем список пользовате
     }, true);
 }
 
-function doWithUsers(what) //работа с пользователями в БД Mysql
+function doWithUsers(what, selectedUsers) //работа с пользователями в БД Mysql
 {
-	var checkedUsers = new Array();
-	
-	for ( var i = 0; i < $("input[type='checkbox']").length; i++ ) //выбираем отмеченных пользователей
+
+	if ( selectedUsers.length > 0 )
 		{
-			if ( $("input[type='checkbox']")[i].checked == true )
-				{
-					checkedUsers.push( $("input[type='checkbox']")[i].parentNode.parentNode.children[1].innerHTML);
-					checkedUsers.push( $("input[type='checkbox']")[i].parentNode.parentNode.children[2].innerHTML);
-                    checkedUsers.push( $(".patterns").val().split(",")[0] );
-				}
-		}
-	
-	if ( checkedUsers.length > 0 )
-		{
-			$.post("/api", { action: what, data: checkedUsers }, function(data)
+			$.post("/api", { action: what, data: selectedUsers }, function(data)
 					{
 						if ( data.result == "ok" )
                         {
@@ -456,7 +450,7 @@ function applyChangesToUsers() //применение изменений пол�
 		}
 }
 
-function appyPatternToUsers() //применение шаблона сразу на множество пользователей
+function applyPatternToUsers() //применение шаблона сразу на множество пользователей
 {
 	var changes = new Array();
 	var pattern = $("option:selected", $(".patterns")).val();
@@ -571,7 +565,8 @@ function selectAll()
 {
     for ( var i = 0; i < $("input").length; i++ )
     {
-        $("input")[i].checked = true;
+        $("input")[i].click();
+        //$("input")[i].checked = true;
     }
 }
 
@@ -579,7 +574,8 @@ function cleanSelectAll()
 {
     for ( var i = 0; i < $("input").length; i++ )
         {
-            $("input")[i].checked = false;
+            $("input")[i].click();
+            //$("input")[i].checked = false;
         }
 }
 

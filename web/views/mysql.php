@@ -75,9 +75,9 @@
 
             $query = "UPDATE users SET trafficForDay= 0 WHERE login in (";
 
-            for( $i = 0; $i < count( $users ); $i += 3 )
+            for( $i = 0; $i < count( $users ); $i++ )
             {
-                if ( $i == (count( $users ) - 3 ) )
+                if ( $i == (count( $users ) - 1 ) )
                 {
                     $query = $query."\"".$users[$i+1]."\")";
                 }

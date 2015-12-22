@@ -36,6 +36,14 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => __DIR__.'/templates',
 ));
 
+function checkSession($app)
+{
+    if ( null === $user = $app['session']->get('user') )
+    {
+        return $app->redirect('/');
+    }
+}
+
 $app->get('/', function() use ($app, $error, $ldap)
 {
     return $app['twig']->render('index.html');
@@ -44,6 +52,9 @@ $app->get('/', function() use ($app, $error, $ldap)
 $app->get('/users', function() use ($app, $error, $ldap)
 {
     return $app['twig']->render('users.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
 });
 
 $app->get('/error', function(Request $request) use ($app)
@@ -73,12 +84,12 @@ $app->post('/login', function(Request $request) use ($app, $mysql, $ldap)
     if( $login === "root" and ( $user_id = $mysql->adminLogin($login, $password) ) )
     {
         $app['session']->set('user', array('id' => $user_id, 'login' => $login));
-        return $app->redirect("/main");
+        return $app->redirect("/users");
     }
     else if( ( $user_id = $mysql->checkAdminExist($login) ) and $ldap->ldapAdminAuth($login, $password) )
     {
         $app['session']->set('user', array('id' => $user_id, 'login' => $login));
-        return $app->redirect("/main");
+        return $app->redirect("/users");
     }
     else
     {
@@ -91,10 +102,7 @@ $app->get('/main', function() use ($app)
     return $app['twig']->render('main.html');
 })->before(function() use($app)
 {
-    if ( null === $user = $app['session']->get('user') )
-    {
-        return $app->redirect('/');
-    }
+    checkSession($app);
 });
 
 $anonymousFunctions = ["getAvailableTraffic"];
@@ -236,10 +244,7 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
 
     if ( !in_array( $action, $anonymousFunctions ) )
     {
-//        if ( null === $user = $app['session']->get('user') )
-//        {
-//            return $app->redirect('/');
-//        }
+        checkSession($app);
     }
 });
 
