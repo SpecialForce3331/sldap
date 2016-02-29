@@ -108,7 +108,7 @@ while (True):
 
     try:
         data = sys.stdin.readline()
-        squid_input = data.rsplit(" ")
+        squid_input = data.split(" ", 1)
 
         conn = get_connection(conn)
         if conn is None:
@@ -118,6 +118,7 @@ while (True):
             url = squid_input[0].strip()
             login = squid_input[1].strip()
             login = login.split("@")[0]
+            login = login.replace("%20", " ")
 
             traffic, access = get_user_data(login)
 
