@@ -23,7 +23,7 @@ if( !empty($checkConf->LdapIp) &&
 )
 {
 //создаем БД и добавляем туда таблицы для будущей работы
-    shell_exec( "mysql -u ".$checkConf->MysqlRootLogin." -p".$checkConf->MysqlRootPassword." < ".$checkConf->sldapDirectory."/install/ldap_squid.sql" );
+    shell_exec( "mysql -u ".$checkConf->MysqlRootLogin." -p".$checkConf->MysqlRootPassword." < ".$checkConf->sldapDirectory."/install/ldap_squid.sql"." -h ".$checkConf->MysqlIp  );
     echo "\n База данных с таблицами создана, перехожу к созданию конфигурационного файла squid.conf \n";
 
 //создаем конфигурационный файл squid.conf
