@@ -1,0 +1,29 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <h3>Создание шаблона</h3>
+
+    <table cellspacing='10'>
+        <thead>
+            <tr>
+                <td><a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">Название шаблона</a></td>
+                <td><a href="#" ng-click="sortType = 'allowedTraffic'; sortReverse = !sortReverse">Объем траффика</a></td>
+                <td><a href="#" ng-click="sortType = 'sitesAccess'; sortReverse = !sortReverse">Доступ к запрещенным сайтам</a></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input ng-model="pattern.label"></td>
+                <td><input ng-model="pattern.allowedTraffic"></td>
+                <td><input type="checkbox" ng-model="pattern.sitesAccess"></td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block panel %}
+    <div>
+        <button onclick="createPattern(scopeAccess.pattern)">Создать</button>
+        <button onclick="window.location.pathname='/patterns'">Отмена</button>
+    </div>
+{% endblock %}

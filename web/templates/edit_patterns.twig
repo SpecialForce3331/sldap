@@ -1,0 +1,34 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <h3>Изменение шаблона</h3>
+
+    <table cellspacing='10'>
+        <thead>
+        <tr>
+            <td><a href="#">Название шаблона</a></td>
+            <td><a href="#">Объем траффика</a></td>
+            <td><a href="#">Доступ к запрещенным сайтам</a></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="pattern in checkedPatterns">
+            {% verbatim %}
+                <td><input ng-model="pattern.label" value="{{pattern.label}}"></td>
+                <td><input ng-model="pattern.allowedTraffic" value="{{pattern.allowedTraffic}}"></td>
+                <td><input type="checkbox" ng-model="pattern.sitesAccess" value="{{pattern.sitesAccess}}"></td>
+            {% endverbatim %}
+        </tr>
+        </tbody>
+    </table>
+    {% verbatim %}
+        {{checkedPatterns}}
+    {% endverbatim %}
+{% endblock %}
+
+{% block panel %}
+    <div>
+        <button onclick="applyChangesToPatterns(scopeAccess.checkedPatterns)">Применить изменения</button>
+        <button onclick="window.location.pathname='/patterns'">Отмена</button>
+    </div>
+{% endblock %}

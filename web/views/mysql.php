@@ -97,20 +97,19 @@
             if ( !$this->checkPermissions( "addUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
-                return;
             }
 
             $query = "INSERT INTO users (login,name,pattern_id) VALUES ";
 
-            for ( $i = 0; $i < count($data); $i += 3 )
+            for ( $i = 0; $i < count($data); $i++ )
             {
-                if ( $i == (count($data) - 3 ) )
+                if ( $i == (count($data) - 1 ) )
                 {
-                    $query = $query."(\"".$data[$i+1]."\",\"".$data[$i]."\",\"".$data[$i+2]."\")";
+                    $query = $query."(\"".$data[$i]["login"]."\",\"".$data[$i]["name"]."\",\"".$data[$i]["pattern"]."\")";
                 }
                 else
                 {
-                    $query = $query."(\"".$data[$i+1]."\",\"".$data[$i]."\",\"".$data[$i+2]."\"),";
+                    $query = $query."(\"".$data[$i]["login"]."\",\"".$data[$i]["name"]."\",\"".$data[$i]["pattern"]."\"),";
                 }
             }
 
@@ -124,20 +123,19 @@
             if ( !$this->checkPermissions( "deleteUsers") )
             {
                 return json_encode( array( "result" => "error", "message" => "У вас недостаточно прав для выполнения этой операции." ));
-                return;
             }
 
             $query = "DELETE FROM users WHERE login IN (";
 
-            for ( $i = 0; $i < count($data); $i += 3 )
+            for ( $i = 0; $i < count($data); $i++ )
             {
-                if ( $i == (count($data) - 3 ) )
+                if ( $i == (count($data) - 1 ) )
                 {
-                    $query = $query."\"".$data[$i+1]."\")";
+                    $query = $query."\"".$data[$i]["login"]."\")";
                 }
                 else
                 {
-                    $query = $query."\"".$data[$i+1]."\",";
+                    $query = $query."\"".$data[$i]["login"]."\",";
                 }
             }
 

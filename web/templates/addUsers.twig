@@ -1,0 +1,52 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <h3>Пользователи Active Directory</h3>
+
+    <div>Поиск:<input ng-model="search"></div>
+    <div>Отображать на странице:<input ng-model="limitPerPage"></div>
+    <div>
+        <button ng-click="prevPage()">Пред.страница</button>
+        <button ng-click="nextPage(users.length)">След.страница</button>
+    </div>
+    <br>
+
+    <table cellspacing='10' id='users'>
+        <thead>
+            <tr>
+                <td>[]</td>
+                <td><a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">ФИО Пользователя</a></td>
+                <td><a href="#" ng-click="sortType = 'login'; sortReverse = !sortReverse">Логин</a></td>
+                <td><a href="#">Шаблон</a></td>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr ng-repeat="user in users | orderBy:sortType:sortReverse | filter:search | limitTo:limitPerPage:startPage ">
+                {% verbatim %}
+                    <td><input type="checkbox" ng-click="switchSelectedUser(user)" /></td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.login }}</td>
+                    <td>
+                        <select
+                            ng-init="user.pattern = patterns[0]"
+                            ng-model="user.pattern"
+                            ng-options="pattern as pattern.label for pattern in patterns track by pattern.value">
+                        </select>
+                    </td>
+                {% endverbatim %}
+            </tr>
+        </tbody>
+    </table>
+    <script>
+        $(function(){
+            getLdapUsers("users");
+        });
+    </script>
+{% endblock %}
+
+{% block panel %}
+    <button onclick='selectAll()'>Выбрать всех</button>
+    <button onclick='cleanSelectAll()'>Снять выбор со всех</button>
+    <button onclick='doWithUsers("addUsers", scopeAccess.selectedUsers)'>Добавить</button>
+{% endblock %}

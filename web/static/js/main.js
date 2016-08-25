@@ -1,29 +1,74 @@
 var scopeAccess;
 
 var myApp = angular.module('myApp',[]);
+
 myApp.controller('UserTraffic', function($scope) {
     $scope.users = [];
     scopeAccess = $scope;
     $scope.sortType = "name";
     $scope.sortReverse = false;
     $scope.selectedUsers = [];
+    $scope.selectedPatterns = [];
+    $scope.patterns = [];
+    $scope.startPage = 1;
+    $scope.limitPerPage = 20;
 
-    $scope.switchSelectedUser = function(user)
-    {
+    $scope.switchSelectedUser = function (user) {
         var index = $scope.selectedUsers.indexOf(user);
 
-        if( index === -1 ) {
-            $scope.selectedUsers.push(user);
+        if (index === -1) {
+            var selectedUser = {};
+            selectedUser.name = user.name;
+            selectedUser.login = user.login;
+            selectedUser.pattern = user.pattern.value;
+
+            $scope.selectedUsers.push(selectedUser);
         }
-        else
-        {
-            $scope.selectedUsers.splice(index,1);
+        else {
+            $scope.selectedUsers.splice(index, 1);
         }
-    }
+    };
+
+    $scope.switchSelectedPattern = function (pattern) {
+        var index = $scope.selectedPatterns.indexOf(pattern);
+
+        if (index === -1) {
+            var selectedPattern = {};
+            selectedPattern.label = pattern.label;
+            selectedPattern.allowedTraffic = pattern.allowedTraffic;
+            selectedPattern.sitesAccess = pattern.sitesAccess;
+
+            $scope.selectedPatterns.push(selectedPattern);
+        }
+        else {
+            $scope.selectedPatterns.splice(index, 1);
+        }
+    };
+
+    $scope.nextPage = function(length) {
+        $scope.limitPerPage = parseInt($scope.limitPerPage);
+
+        if ( ($scope.startPage + $scope.limitPerPage) <= length ) {
+            $scope.startPage += $scope.limitPerPage;
+        }
+    };
+
+    $scope.prevPage = function() {
+        $scope.limitPerPage = parseInt($scope.limitPerPage);
+
+        if ( $scope.startPage >= $scope.limitPerPage ) {
+            $scope.startPage -= $scope.limitPerPage;
+        }
+        else {
+            $scope.startPage = 1;
+        }
+    };
+
 });
 
 function getMysqlUsers() //получаем пользователей из БД MySQL
 {
+    getPatternsForList();
     sendAJAXCommand("/api",{action: "getMysqlUsers"}, function(data){
 
         var access;
@@ -62,82 +107,62 @@ function getMysqlUsers() //получаем пользователей из БД
             });
 
         }
-
-        getPatternsForList();
     }, true);
 }
 
 function getLdapUsers(type) //получаем список пользователей из AD
 {
+    getPatternsForList();
+
     sendAJAXCommand("/api",{action: "getLdapUsers", type: type}, function(data){
+        scopeAccess.$apply(function(){
+            scopeAccess.users = [];
+        });
 
-        $("#main").empty();
-        $("#panel").empty();
-        $("#main").append("<h3>Список пользователей из AD</h3><b>Здесь отображаются еще не добавленные пользователи.</b><br>");
-
-        $("#main").append("<table id='ldapUsers'></table>");
-        $("#ldapUsers").append("<thead>" +
-            "<tr>" +
-            "<td>[]</td>" +
-            "<td>ФИО</td>" +
-            "<td>Логин</td>" +
-            "<td>Шаблон</td>" +
-            "</tr></thead><tbody>");
 
         for ( var i = 0; i < data.result.count; i++ )
         {
             var name = data.result[i]["dn"];
-            name = name.split(",")
+            name = name.split(",");
             name = name[0].substr(3);
 
             if (!data.result[i]["samaccountname"]){continue}
             var sam = data.result[i]["samaccountname"][0];
 
-            $("#ldapUsers").append("<tr>" +
-                "<td><input type='checkbox'/></td>" +
-                "<td>" + name + "</td>" +
-                "<td>" + sam + "</td>" +
-                "<td><select class='patterns'></select></td>" +
-                "</tr>");
-
+            scopeAccess.$apply(function(){
+                scopeAccess.users.push({name: name, login: sam})
+            });
         }
-        $("#ldapUsers").append("</tbody>");
-        getPatternsForList();
-
-        $("#panel").append("<button onclick='selectAll()'>Выбрать всех</button><button onclick='cleanSelectAll()'>Снять выбор со всех</button><button onclick='doWithUsers(\"addUsers\")'>Добавить</button>");
-
-    }, true);
+    }, true, true);
 }
 
 function doWithUsers(what, selectedUsers) //работа с пользователями в БД Mysql
 {
-
 	if ( selectedUsers.length > 0 )
 		{
-			$.post("/api", { action: what, data: selectedUsers }, function(data)
-					{
-						if ( data.result == "ok" )
-                        {
-                            $("#main").empty();
-                            $("#panel").empty();
+			$.post("/api", { action: what, data: selectedUsers }, function(data) {
+                if ( data.result == "ok" )
+                {
+                    $("#main").empty();
+                    $("#panel").empty();
 
-                            if ( what == "addUsers")
-                            {
-                                getLdapUsers('users');
-                            }
-                            else if ( what == "deleteUsers" )
-                            {
-                                getMysqlUsers();
-                            }
-                            else if ( what == "cleanTraffic" )
-                            {
-                                getMysqlUsers();
-                            }
-                        }
+                    if ( what == "addUsers")
+                    {
+                        getLdapUsers('users');
+                    }
+                    else if ( what == "deleteUsers" )
+                    {
+                        getMysqlUsers();
+                    }
+                    else if ( what == "cleanTraffic" )
+                    {
+                        getMysqlUsers();
+                    }
+                }
 
-						alert(data.message);
+                alert(data.message);
 
-					}, "json");
+            }, "json");
 		
 		}
 	else
@@ -176,30 +201,44 @@ function getPatterns() // получаем шаблоны из БД и отоб�
 
             $("#patterns").append("<tr><td><input type='checkbox'/></td><td>" + data.result[i][0] + "</td><td>" + data.result[i][1] + "</td><td>" + access + "</td></tr>" );
         }
-        $("#patterns").append("</tbody>");
-
-        $("#panel").empty();
-        $("#panel").append("<div>Операции с шаблонами</div>");
-        $("#panel").append("" +
-            "<button onclick='selectAll()'>Выделить все</button>" +
-            "<button onclick='cleanSelectAll()'>Снять выделение</button>" +
-            "<button onclick='showFormCreatePattern()'>Создать</button>" +
-            "<button onclick='showEditPattern()'>Изменить</button>" +
-            "<button onclick='deletePattern()'>Удалить</button>" +
-            "");
-
     }, true);
-
-
 }
 
 function getPatternsForList() // получаем шаблоны из бд и наполняем выпадающий список при редактировании пользователей этими шаблонами
 {
     sendAJAXCommand("/api",{action: "getPatterns"}, function(data)
     {
+        scopeAccess.$apply(function(){
+            scopeAccess.patterns = [];
+        });
+
+        var access;
+        var allowedTraffic;
+
         for ( var i = 0; i < data.result.length; i++ )
         {
-            $(".patterns").each(function(){ $(this).append("<option value='" + data.result[i][3] + "'>" + data.result[i][0] + "</option>")});
+            if ( data.result[i][2] != "0" )
+            {
+                access = "есть";
+            }
+            else
+            {
+                access = "нет";
+            }
+
+            if ( data.result[i][1] === '0' )
+            {
+                allowedTraffic = "Безлимит";
+            }
+            else
+            {
+                allowedTraffic = data.result[i][1] + " Мб";
+            }
+
+            scopeAccess.$apply(function(){
+                scopeAccess.patterns.push({"value": data.result[i][3], "label": data.result[i][0], "allowedTraffic": allowedTraffic, "sitesAccess": access});
+            });
+
         }
     }, true);
 }
@@ -260,39 +299,38 @@ function tryPatternToUser() //при клике по шаблону из вып�
 	objectAccess.value = selectedValue[2];	
 }
 
-function showFormCreatePattern() // отображаем форму для создания шаблона
+function showFormCreatePattern(selectedPatterns) // отображаем форму для создания шаблона
 {
-	$("#patterns").append("<tr><td>[]</td>" +
-			"<td><input id='name' type='text' placeholder='Название шаблона'/></td>" +
-			"<td><input id='allowTraffic' type='text' placeholder='Кол-во траффика'/></td>" +
-			"<td>" +
-			"<select id='access'>" +
-			"<option value='0'>Запретить</option>" +
-			"<option value='1'>Разрешить</option>" +
-			"</select>" +
-			"<button onclick='createPattern()'>Применить</button>" +
-			"</td>" +
-			"</tr>");
+    window.location.pathname='/edit_patterns';
+    scopeAccess.selectedPatterns = selectedPatterns;
+    console.log(selectedPatterns);
 }
 
-function createPattern() //запрос на сервер с целью создания шаблона
+function createPattern(pattern) //запрос на сервер с целью создания шаблона
 {	
-	var name = $("#name").val();
-	var traffic = $("#allowTraffic").val();
-	var access = $("#access").val();
+	var name = pattern.label;
+	var traffic = pattern.allowedTraffic;
+	var access = pattern.sitesAccess;
 	
 	if ( name != "" && traffic != "" && access != "" )
 	{
+	    if ( access === true )
+        {
+            access = 1;
+        }
+        else
+        {
+            access = 0;
+        }
+
         sendAJAXCommand("/api",{action: "createPattern", name: name, traffic: traffic, access: access}, function(data){
             if( data.result == "ok" )
             {
-                getPatterns();
+                window.location.pathname = "/patterns";
             }
             else
             {
                 $("#main").empty();
-                $("#panel").empty();
-
                 $("#main").append("<div>Вы не заполнили или несколько полей.</div>" + data.name + " " + data.traffic + " " + data.access);
             }
         }, true);
@@ -358,9 +396,9 @@ function showEditUsers() //отображаем форму для редакти
 					$("#editUsers").append("<tr>" +
 							"<td><span>" + checkedUsers[i][0] + "</span></td>" +
 							"<td><span>" + checkedUsers[i][1] + "</span></td>" +
-							"<td><input type='text' value='" + checkedUsers[i][2] + "'></input></td>" +
-							"<td><input type='text' value='" + checkedUsers[i][3] + "' readonly ></input><div><select class='patterns' onchange='tryPatternToUser()'></select></div></td>" +
-							"<td><input id='access"+[i]+"' type='text' value='" + checkedUsers[i][4] + "' readonly ></input><br>" +
+							"<td><input type='text' value='" + checkedUsers[i][2] + "'></td>" +
+							"<td><input type='text' value='" + checkedUsers[i][3] + "' readonly ><div><select class='patterns' onchange='tryPatternToUser()'></select></div></td>" +
+							"<td><input id='access"+[i]+"' type='text' value='" + checkedUsers[i][4] + "' readonly ><br>" +
 									"<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Да\");' />Да" +
 									"<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Нет\");' />Нет" +
 									"</td>" +
@@ -494,7 +532,7 @@ function showFormCreateDenySite()
 	
 	var form = "<tr><td><input type=\\\"text\\\" placeholder=\\\"Адрес сайта\\\" /></td><tr>";
 
-	$("#main").append("<i>Внимание! Для проверки используется регулярное выражение, следовательно, чем короче вы укажете адрес сайта, тем вероятнее больше сайтов будет залокированно</i>");
+	$("#main").append("<i>Внимание! Для проверки используется регулярное выражение, следовательно, чем короче вы укажете адрес сайта, тем вероятнее больше сайтов будет заблокированно</i>");
 	$("#main").append("<table>" +
 			"<tr><td><input type=\"text\" placeholder=\"Адрес сайта\" /></td><tr>" +
 			"</table>");
@@ -563,19 +601,17 @@ function applyChangesToDenySites()
 
 function selectAll()
 {
-    for ( var i = 0; i < $("input").length; i++ )
+    for ( var i = 0; i < $( ":checkbox" ).length; i++ )
     {
-        $("input")[i].click();
-        //$("input")[i].checked = true;
+        $( ":checkbox" )[i].checked = true;
     }
 }
 
 function cleanSelectAll()
 {
-    for ( var i = 0; i < $("input").length; i++ )
+    for ( var i = 0; i < $( ":checkbox" ).length; i++ )
         {
-            $("input")[i].click();
-            //$("input")[i].checked = false;
+            $( ":checkbox" )[i].checked = false;
         }
 }
 
@@ -1039,9 +1075,12 @@ function applyChangesToPermissions()
     sendAJAXCommand("/api",{action: "applyChangesToPermissions", id: id, name: name, permissions: permissions}, showPermissionPatterns );
 }
 
-function sendAJAXCommand(url, params, callbackFunction, needData)
+function sendAJAXCommand(url, params, callbackFunction, needData, disableLoadingScreen)
 {
-    $("#loading-container").show();
+    if ( disableLoadingScreen === true )
+    {
+        $("#loading-container").show();
+    }
 
     $.post(url, params, function( data )
     {
@@ -1062,16 +1101,18 @@ function sendAJAXCommand(url, params, callbackFunction, needData)
             }
 
         }
-        $("#loading-container").hide();
+        if ( disableLoadingScreen === true )
+        {
+            $("#loading-container").hide();
+        }
     },"json");
 }
 
 //Функция заменяет существующий класс новым, порядок передачи классов значения не имеет.
-function toggleCssClass(object, class1, class2)
-{
+function toggleCssClass(object, class1, class2) {
     toAddClass = $(object).hasClass(class1) ? class2 : class1;
     toRemoveClass = toAddClass === class1 ? class2 : class1;
 
     $(object).removeClass(toRemoveClass);
     $(object).addClass(toAddClass);
-}
+};

@@ -57,6 +57,38 @@ $app->get('/users', function() use ($app, $error, $ldap)
     checkSession($app);
 });
 
+$app->get('/add_users', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('addUsers.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
+$app->get('/create_pattern', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('create_pattern.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
+$app->get('/patterns', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('patterns.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
+$app->get('/edit_patterns', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('edit_patterns.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
 $app->get('/error', function(Request $request) use ($app)
 {
     $message = $request->get("message");
@@ -238,8 +270,7 @@ $app->post('/api', function(Request $request) use ($app, $mysql, $ldap)
     {
         return "Incorrect query!";
     }
-})->before(function(Request $request) use($app, $anonymousFunctions)
-{
+})->before(function(Request $request) use($app, $anonymousFunctions) {
     $action = $request->get("action");
 
     if ( !in_array( $action, $anonymousFunctions ) )

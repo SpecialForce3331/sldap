@@ -1,1 +1,1 @@
-*/5 * * * * cd /media/sizov/FileStorage/PhpstormProjects/sldap && python3 parser.py 
+*/5 * * * * cd /var/www/sldap && python3 parser.py 
