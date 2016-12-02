@@ -65,6 +65,22 @@ $app->get('/add_users', function() use ($app, $error, $ldap)
     checkSession($app);
 });
 
+$app->get('/sites_access', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('sites_access.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
+$app->get('/edit_sites', function() use ($app, $error, $ldap)
+{
+    return $app['twig']->render('edit_sites.twig');
+})->before(function() use($app)
+{
+    checkSession($app);
+});
+
 $app->get('/create_pattern', function() use ($app, $error, $ldap)
 {
     return $app['twig']->render('create_pattern.twig');

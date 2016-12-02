@@ -12,7 +12,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="pattern in checkedPatterns">
+        <tr ng-repeat="pattern in selectedPatterns">
             {% verbatim %}
                 <td><input ng-model="pattern.label" value="{{pattern.label}}"></td>
                 <td><input ng-model="pattern.allowedTraffic" value="{{pattern.allowedTraffic}}"></td>
@@ -22,7 +22,7 @@
         </tbody>
     </table>
     {% verbatim %}
-        {{checkedPatterns}}
+        {{selectedPatterns}}
     {% endverbatim %}
 {% endblock %}
 

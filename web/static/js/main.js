@@ -3,18 +3,25 @@ var scopeAccess;
 var myApp = angular.module('myApp',[]);
 
 myApp.controller('UserTraffic', function($scope) {
-    $scope.users = [];
     scopeAccess = $scope;
+    $scope.users = [];
     $scope.sortType = "name";
     $scope.sortReverse = false;
     $scope.selectedUsers = [];
     $scope.selectedPatterns = [];
+    $scope.selectedSites = [];
     $scope.patterns = [];
+    $scope.sites = [];
     $scope.startPage = 1;
     $scope.limitPerPage = 20;
 
     $scope.switchSelectedUser = function (user) {
-        var index = $scope.selectedUsers.indexOf(user);
+        var index = $scope.selectedUsers.findIndex(function(element, index, array){
+            if (element.login === user.login) {
+                return true;
+            }
+            return false;
+        });
 
         if (index === -1) {
             var selectedUser = {};
@@ -30,7 +37,12 @@ myApp.controller('UserTraffic', function($scope) {
     };
 
     $scope.switchSelectedPattern = function (pattern) {
-        var index = $scope.selectedPatterns.indexOf(pattern);
+        var index = $scope.selectedPatterns.findIndex(function(element, index, array){
+            if (element.label === pattern.label) {
+                return true;
+            }
+            return false;
+        });
 
         if (index === -1) {
             var selectedPattern = {};
@@ -42,6 +54,24 @@ myApp.controller('UserTraffic', function($scope) {
         }
         else {
             $scope.selectedPatterns.splice(index, 1);
+        }
+    };
+
+    $scope.switchSelectedSite = function (site) {
+        var index = $scope.selectedSites.findIndex(function(element, index, array){
+            if ( element.url === site.url ) {
+                return true;
+            }
+            return false;
+        });
+        if (index === -1) {
+            var selectedSite = {};
+            selectedSite = site;
+
+            $scope.selectedSites.push(selectedSite);
+        }
+        else {
+            $scope.selectedSites.splice(index, 1);
         }
     };
 
@@ -245,38 +275,13 @@ function getPatternsForList() // получаем шаблоны из бд и н
 
 function getDenySites() // получаем список запрещенных сайтов из бд
 {
-	$("#main").empty();
-	$("#panel").empty();
-	
-	$("#main").append("<table id='denySites'>" +
-			"<thead>" +
-                "<tr>" +
-                    "<td>[]</td>" +
-                    "<td>Адрес сайта</td>" +
-                "</tr>" +
-            "</thead></table>");
-	$("#denySites").append("<tbody>");
-
     sendAJAXCommand("/api",{action: "getDenySites"}, function(data){
         for ( var i = 0; i < data.result.length; i++ )
         {
-            $("#denySites").append("" +
-                "<tr>" +
-                "<td>" +
-                "<input type='checkbox' id=" + data.result[i][0] + " />" +
-                "</td>" +
-                "<td>" + data.result[i][1] + "</td>" +
-                "</tr>");
+            scopeAccess.$apply(function(){
+                scopeAccess.sites.push({"id": data.result[i][0],"url": data.result[i][1]});
+            });
         }
-
-        $("#denySites").append("</tbody>");
-
-        $("#panel").append("" +
-            "<button onclick='selectAll()'>Выбрать все</button>" +
-            "<button onclick='cleanSelectAll()'>Снять выбор со всех</button>" +
-            "<button onclick='showEditDenySite()'>Изменить</button>" +
-            "<button onclick='deleteDenySite()'>Удалить</button>" +
-            "<button onclick='showFormCreateDenySite()'>Создать</button>");
     }, true);
 }
 
@@ -299,44 +304,40 @@ function tryPatternToUser() //при клике по шаблону из вып�
 	objectAccess.value = selectedValue[2];	
 }
 
-function showFormCreatePattern(selectedPatterns) // отображаем форму для создания шаблона
-{
+function showFormCreatePattern(selectedPatterns) {
     window.location.pathname='/edit_patterns';
     scopeAccess.selectedPatterns = selectedPatterns;
-    console.log(selectedPatterns);
 }
 
-function createPattern(pattern) //запрос на сервер с целью создания шаблона
-{	
+function showFormCreateSite(selectedSites) {
+    window.location.pathname='/edit_sites';
+    scopeAccess.selectedSites = selectedSites;
+}
+
+function createPattern(pattern) {
 	var name = pattern.label;
 	var traffic = pattern.allowedTraffic;
 	var access = pattern.sitesAccess;
 	
-	if ( name != "" && traffic != "" && access != "" )
-	{
-	    if ( access === true )
-        {
+	if ( name != "" && traffic != "" && access != "" ) {
+	    if ( access === true ) {
             access = 1;
         }
-        else
-        {
+        else {
             access = 0;
         }
 
         sendAJAXCommand("/api",{action: "createPattern", name: name, traffic: traffic, access: access}, function(data){
-            if( data.result == "ok" )
-            {
+            if( data.result == "ok" ) {
                 window.location.pathname = "/patterns";
             }
-            else
-            {
+            else {
                 $("#main").empty();
                 $("#main").append("<div>Вы не заполнили или несколько полей.</div>" + data.name + " " + data.traffic + " " + data.access);
             }
         }, true);
 	}
-	else
-	{
+	else {
 		$("#main").empty();
 		$("#panel").empty();
 		
@@ -344,91 +345,77 @@ function createPattern(pattern) //запрос на сервер с целью �
 	}
 }
 
-function deletePattern() //запрос на сервер с целью удаления шаблона
-{
+function deletePattern() {
 	var checkedPatterns = new Array();
 	
-	for ( var i = 0; i < $("input").length; i++ )
-		{
-			if( $("input")[i].checked == true )
-				{
-					checkedPatterns.push( $("input")[i].parentNode.parentNode.children[1].innerHTML );
-				}
-		}
-
+	for ( var i = 0; i < $("input").length; i++ ) {
+        if( $("input")[i].checked == true ) {
+            checkedPatterns.push( $("input")[i].parentNode.parentNode.children[1].innerHTML );
+        }
+    }
     sendAJAXCommand("/api",{action: "deletePattern", patterns: checkedPatterns}, getPatterns);
-
 }
 
-function showEditUsers() //отображаем форму для редактирования атрибутов пользователей
-{
+function showEditUsers() {
 	var checkedUsers = new Array();
 
-	for ( var i = 0; i < $("input").length; i++ ) //выбираем отмеченных пользователей
-		{
-			if ( $("input")[i].checked == true )
-				{
-					checkedUsers.push( new Array( $("input")[i].parentNode.parentNode.children[1].innerHTML,
-													$("input")[i].parentNode.parentNode.children[2].innerHTML,
-													$("input")[i].parentNode.parentNode.children[4].innerHTML,
-													$("input")[i].parentNode.parentNode.children[5].innerHTML,
-													$("input")[i].parentNode.parentNode.children[6].innerHTML ) );
-				}
-		}
+	for ( var i = 0; i < $("input").length; i++ ) {
+        if ( $("input")[i].checked == true ) {
+            checkedUsers.push( new Array( $("input")[i].parentNode.parentNode.children[1].innerHTML,
+                                            $("input")[i].parentNode.parentNode.children[2].innerHTML,
+                                            $("input")[i].parentNode.parentNode.children[4].innerHTML,
+                                            $("input")[i].parentNode.parentNode.children[5].innerHTML,
+                                            $("input")[i].parentNode.parentNode.children[6].innerHTML ) );
+        }
+    }
 
-	if ( checkedUsers.length > 0 )
-		{
-			$("#main").empty();
-			$("#panel").empty();
+	if ( checkedUsers.length > 0 ) {
+        $("#main").empty();
+        $("#panel").empty();
 
-			$("#main").append("<table id='editUsers'></table>");
-			$("#editUsers").append("" +
-					"<thead><tr>" +
-					"<td>ФИО</td>" +
-					"<td>Логин</td>" +
-					"<td>Разрешенный траффик</td>" +
-					"<td>Шаблон</td>" +
-					"<td>Доступ на запрещенные сайты</td></thead><tbody>");
+        $("#main").append("<table id='editUsers'></table>");
+        $("#editUsers").append("" +
+                "<thead><tr>" +
+                "<td>ФИО</td>" +
+                "<td>Логин</td>" +
+                "<td>Разрешенный траффик</td>" +
+                "<td>Шаблон</td>" +
+                "<td>Доступ на запрещенные сайты</td></thead><tbody>");
 
 
-			for ( var i = 0; i < checkedUsers.length; i++ )
-				{
-					$("#editUsers").append("<tr>" +
-							"<td><span>" + checkedUsers[i][0] + "</span></td>" +
-							"<td><span>" + checkedUsers[i][1] + "</span></td>" +
-							"<td><input type='text' value='" + checkedUsers[i][2] + "'></td>" +
-							"<td><input type='text' value='" + checkedUsers[i][3] + "' readonly ><div><select class='patterns' onchange='tryPatternToUser()'></select></div></td>" +
-							"<td><input id='access"+[i]+"' type='text' value='" + checkedUsers[i][4] + "' readonly ><br>" +
-									"<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Да\");' />Да" +
-									"<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Нет\");' />Нет" +
-									"</td>" +
-							"</tr>");
-				}
-            $("#editUsers").append("</tbody></table>");
-			$("#panel").append("" +
-					"<button onclick='applyChangesToUsers()'>Применить изменения</button>" +
-					"<button onclick='getMysqlUsers()'>Отмена</button>");
+        for ( var i = 0; i < checkedUsers.length; i++ ) {
+            $("#editUsers").append("<tr>" +
+                    "<td><span>" + checkedUsers[i][0] + "</span></td>" +
+                    "<td><span>" + checkedUsers[i][1] + "</span></td>" +
+                    "<td><input type='text' value='" + checkedUsers[i][2] + "'></td>" +
+                    "<td><input type='text' value='" + checkedUsers[i][3] + "' readonly ><div><select class='patterns' onchange='tryPatternToUser()'></select></div></td>" +
+                    "<td><input id='access"+[i]+"' type='text' value='" + checkedUsers[i][4] + "' readonly ><br>" +
+                            "<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Да\");' />Да" +
+                            "<input type='radio' name='access"+[i]+"' onclick='changeAccess(\"#access"+[i]+"\",\"Нет\");' />Нет" +
+                            "</td>" +
+                    "</tr>");
+        }
+        $("#editUsers").append("</tbody></table>");
+        $("#panel").append("" +
+                "<button onclick='applyChangesToUsers()'>Применить изменения</button>" +
+                "<button onclick='getMysqlUsers()'>Отмена</button>");
 
-			getPatternsForList(); //получаем шаблоны и наполняем ими выпадающий список
-		}
+        getPatternsForList(); //получаем шаблоны и наполняем ими выпадающий список
+    }
 }
 
-function changeAccess( id, access )
-{
+function changeAccess( id, access ) {
 	$(id).val(access);
 }
 
-function showEditPattern() //отображает форму для редактирования шаблонов
-{
+function showEditPattern() {
 	var checkedPattern = new Array();
 	
-	for( var i = 0; i < $("input[type='checkbox']").length; i++ )
-		{
-			if ( $("input[type='checkbox']")[i].checked == true )
-				{
-					checkedPattern.push( new Array( $("tbody tr")[i].children[1].innerHTML, $("tbody tr")[i].children[2].innerHTML, $("tbody tr")[i].children[3].innerHTML ) );
-				}
-		}
+	for( var i = 0; i < $("input[type='checkbox']").length; i++ ) {
+        if ( $("input[type='checkbox']")[i].checked == true ) {
+            checkedPattern.push( new Array( $("tbody tr")[i].children[1].innerHTML, $("tbody tr")[i].children[2].innerHTML, $("tbody tr")[i].children[3].innerHTML ) );
+        }
+    }
 	
 	if ( checkedPattern.length > 0 )
 		{
@@ -590,35 +577,25 @@ function deleteDenySite()
 
 function applyChangesToDenySites()
 {
-    var changes = [];
-
-    $("#main > div").each(function(){
-       changes.push( [$(this).attr("id"), $(this).find("input").val()] );
-    });
-
-    sendAJAXCommand("/api", {action: "editDenySite", changes: changes}, getDenySites );
+    sendAJAXCommand("/api", {action: "editDenySite", changes: scopeAccess.selectedSites} );
+    window.location.pathname='/sites_access';
 }
 
-function selectAll()
-{
-    for ( var i = 0; i < $( ":checkbox" ).length; i++ )
-    {
-        $( ":checkbox" )[i].checked = true;
+function selectAll() {
+    for ( var i = 0; i < $( ":checkbox" ).length; i++ ) {
+        $( ":checkbox" )[i].click();
     }
 }
 
-function cleanSelectAll()
-{
-    for ( var i = 0; i < $( ":checkbox" ).length; i++ )
-        {
-            $( ":checkbox" )[i].checked = false;
-        }
+function cleanSelectAll() {
+    for ( var i = 0; i < $( ":checkbox" ).length; i++ ) {
+        $( ":checkbox" )[i].click();
+    }
 }
 
 var maxStatisticRecords = 15;
 
-function showStatistic()
-{
+function showStatistic() {
 
     $("#main").empty();
     $("#panel").empty();
@@ -645,20 +622,17 @@ function getTopList(type, count, fromDate, toDate, login)
 {
     var header = "";
 
-    if ( type === "login" )
-    {
+    if ( type === "login" ) {
         header = "Пользователи";
     }
-    else if( type === "site" )
-    {
+    else if( type === "site" ) {
         header = "Сайты"
     }
 
     $("#main").empty();
     $("#panel").empty();
 
-    sendAJAXCommand("/api",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate, login: login}, function(data)
-    {
+    sendAJAXCommand("/api",{action: "getTop", type:type, count: count, fromDate: fromDate, toDate: toDate, login: login}, function(data) {
         $("#main").append("<table id='topStats'></table>");
         $("#topStats").append("" +
             "<thead>" +
@@ -668,8 +642,7 @@ function getTopList(type, count, fromDate, toDate, login)
             "</tr>" +
             "</thead><tbody>");
 
-        for( var i = 0; i < data.data.length; i++ )
-        {
+        for( var i = 0; i < data.data.length; i++ ) {
             $("#topStats").append("" +
                 "<tr>" +
                 "<td>" + (data.data[i][0]/1048576).toFixed(3) + "</td>" +
@@ -682,8 +655,7 @@ function getTopList(type, count, fromDate, toDate, login)
     }, true);
 }
 
-function selectUserFromPopupUserList()
-{
+function selectUserFromPopupUserList() {
     sendAJAXCommand("/api", {action: "getMysqlUsers"}, function (data) {
         $("#userList").append("<table id='user_table'>" +
         "<thead><tr>" +
@@ -726,12 +698,9 @@ function selectUserFromPopupUserList()
     }, true);
 }
 
-function selectUserPopup(object)
-{
-    $(object).parent().find("tr").each(function()
-    {
-        if ( $(this).hasClass('selectable-row-selected') )
-        {
+function selectUserPopup(object) {
+    $(object).parent().find("tr").each(function() {
+        if ( $(this).hasClass('selectable-row-selected') ) {
             toggleCssClass($(this), 'selectable-row', 'selectable-row-selected');
         }
     });
@@ -739,8 +708,7 @@ function selectUserPopup(object)
     toggleCssClass($(object), 'selectable-row', 'selectable-row-selected');
 }
 
-function selectAdminsFromPopupList()
-{
+function selectAdminsFromPopupList() {
     sendAJAXCommand("/api", {action: "getLdapUsers", type: "admins"}, function (data) {
         $("#adminList").html("<table id='admin_table'>" +
         "<thead><tr>" +
@@ -805,8 +773,7 @@ function selectAdminsFromPopupList()
     }, true);
 }
 
-function showPreferences()
-{
+function showPreferences() {
     $("#main").empty();
     $("#panel").empty();
 
@@ -814,8 +781,7 @@ function showPreferences()
     $("#main").append("<div class='btn-blue' onclick='showPermissionPatterns()'>Управление шаблонами прав</div>");
 }
 
-function showAdmins()
-{
+function showAdmins() {
     $("#main").empty();
     $("#panel").empty();
 
@@ -853,8 +819,7 @@ function showAdmins()
 
 }
 
-function doWithAdmins( what )
-{
+function doWithAdmins( what ) {
     var checkedAdmins = new Array();
 
     $("input[type=checkbox]:checked").each( function( index, input ){
@@ -875,8 +840,7 @@ function doWithAdmins( what )
     }
 }
 
-function showFormCreateAdmin()
-{
+function showFormCreateAdmin() {
     $("#main").empty();
     $("#panel").empty();
 
@@ -891,8 +855,7 @@ function showFormCreateAdmin()
     getPermissionList();
 }
 
-function showEditAdmins( checkedAdmins )
-{
+function showEditAdmins( checkedAdmins ) {
     $("#main").empty();
     $("#panel").empty();
 
@@ -905,8 +868,7 @@ function showEditAdmins( checkedAdmins )
         "<td>Шаблон разрешений</td>" +
         "</tr></thead><tbody>");
 
-    checkedAdmins.forEach( function( admin )
-    {
+    checkedAdmins.forEach( function( admin ) {
         $("#editAdmins").append("" +
             "<tr>" +
             "<td><input id="+admin[0]+" type='text' value="+admin[1]+" /></td>" +
@@ -922,8 +884,7 @@ function showEditAdmins( checkedAdmins )
     $("#panel").append("<button onclick='applyChangesToAdmin()'>Применить</button><button onclick='showAdmins()'>Отмена</button>");
 }
 
-function getPermissionList()
-{
+function getPermissionList() {
     sendAJAXCommand("/api",{action: "getPermissions"}, function(data){
         for( var i = 0; i < data.data.length; i++ )
         {
@@ -932,17 +893,14 @@ function getPermissionList()
     }, true);
 }
 
-function createAdminAccount(data)
-{
-    if( typeof data != 'undefined' )
-    {
+function createAdminAccount(data) {
+    if( typeof data != 'undefined' ) {
         sendAJAXCommand("/api", {
             action: "createLdapAdminAccounts",
             data: data
         }, showAdmins);
     }
-    else
-    {
+    else {
         sendAJAXCommand("/api", {
             action: "createAdminAccount",
             login: $("#login").val(),
@@ -954,20 +912,17 @@ function createAdminAccount(data)
 
 }
 
-function deleteAdmins(data)
-{
+function deleteAdmins(data) {
     sendAJAXCommand("/api", {
         action: "deleteAdmins",
         data: data
     }, showAdmins);
 }
 
-function applyChangesToAdmin()
-{
+function applyChangesToAdmin() {
     var changes = new Array();
 
-    for( var i = 1; i < $("tr").length; i++ )
-    {
+    for( var i = 1; i < $("tr").length; i++ ) {
         var id = $($("tr").get(i)).find("input:first").attr("id");
         var login = $($("tr").get(i)).find("input:first").val();
         var password = $($("tr").get(i)).find("input").get(1).value;
@@ -976,14 +931,12 @@ function applyChangesToAdmin()
 
         changes.push([id,login, password, retype_password, permission_id]);
     }
-    if ( changes.length > 0 )
-    {
+    if ( changes.length > 0 ) {
         sendAJAXCommand("/api",{action: "applyChangesToAdmin", changes: changes}, showAdmins )
     }
 }
 
-function showPermissionPatterns()
-{
+function showPermissionPatterns() {
     $("#main").empty();
     $("#panel").empty();
 
@@ -1042,8 +995,7 @@ function showPermissionPatterns()
 
 }
 
-function getPermissionsById(id)
-{
+function getPermissionsById(id) {
     $("input[type=checkbox]:checked").each(function(index, checkbox){ $(checkbox).prop("checked",false)});
 
     sendAJAXCommand("/api",{action: "getPermissionsById", id: id }, function(data){
@@ -1060,8 +1012,7 @@ function getPermissionsById(id)
     }, true);
 }
 
-function applyChangesToPermissions()
-{
+function applyChangesToPermissions() {
     var id = $(".permissions:visible").val();
     id = id == undefined ? "" : id;
 
@@ -1075,34 +1026,26 @@ function applyChangesToPermissions()
     sendAJAXCommand("/api",{action: "applyChangesToPermissions", id: id, name: name, permissions: permissions}, showPermissionPatterns );
 }
 
-function sendAJAXCommand(url, params, callbackFunction, needData, disableLoadingScreen)
-{
-    if ( disableLoadingScreen === true )
-    {
+function sendAJAXCommand(url, params, callbackFunction, needData, disableLoadingScreen) {
+    if ( disableLoadingScreen === true ) {
         $("#loading-container").show();
     }
 
-    $.post(url, params, function( data )
-    {
-        if ( data.message && data.message.length > 0 )
-        {
+    $.post(url, params, function( data ) {
+        if ( data.message && data.message.length > 0 ) {
             alert( data.message );
         }
 
-        if( data.result != "error" )
-        {
-            if( needData )
-            {
+        if( data.result != "error" ) {
+            if( needData ) {
                 callbackFunction(data);
             }
-            else
-            {
+            else {
                 callbackFunction();
             }
 
         }
-        if ( disableLoadingScreen === true )
-        {
+        if ( disableLoadingScreen === true ) {
             $("#loading-container").hide();
         }
     },"json");
@@ -1116,3 +1059,8 @@ function toggleCssClass(object, class1, class2) {
     $(object).removeClass(toRemoveClass);
     $(object).addClass(toAddClass);
 };
+
+$(document).ready(function(){
+    // the "href" attribute of .modal-trigger must specify the modal ID that wants to be triggered
+    $('.modal').modal();
+});

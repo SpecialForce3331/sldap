@@ -3,38 +3,55 @@
 {% block content %}
     <h3>Запрещенные сайты</h3>
 
-    <div>Поиск:<input ng-model="search"><br>
+    <div>Поиск:<input class="search" ng-model="search"><br></div>
 
-        <table cellspacing='10' id='sites'>
-            <thead>
-            <tr>
-                <td>[]</td>
-                <td><a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">Название сайта</a></td>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr ng-repeat="site in sites | orderBy:sortType:sortReverse | filter:search">
-                {% verbatim %}
-                    <td><input type="checkbox" ng-click="switchSelectedPattern(pattern)" /></td>
-                    <td>{{ site.name }}</td>
-                {% endverbatim %}
-            </tr>
-            </tbody>
-        </table>
-
-        <script>
-            $(function(){
-                getPatternsForList();
-            });
-        </script>
+    <div><a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">URL сайта</a></div>
+    <div ng-repeat="site in sites | orderBy:sortType:sortReverse | filter:search">
+        {% verbatim %}
+            <form action="#">
+                <p>
+                    <td>
+                      <input type="checkbox" id="{{ site.url }}" ng-click="switchSelectedSite(site)"/>
+                    </td>
+                    <td>
+                      <label for="{{ site.url }}">{{ site.url }}</label>
+                    </td>
+                </p>
+            </form>
+        {% endverbatim %}
     </div>
+    <script>
+        $(function(){
+            getDenySites();
+        });
+    </script>
+
+    <!-- Modal Structure -->
+    <div id="modal1" class="modal">
+    {% verbatim %}
+        <div class="modal-content">
+            <h4>Изменение сайтов</h4>
+            <div ng-repeat="site in selectedSites">
+                <div class="input-field col s6">
+                    <input placeholder="{{site.url}}" id="{{site.id}}" type="text" class="validate" ng-model="site.url">
+                    <label for="{{site.url}}"></label>
+                </div>
+
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-action waves-effect waves-green btn-flat" onclick="applyChangesToDenySites();$('.modal-close').click()">Применить</a>
+            <a href="#!" class="modal-action modal-close waves-effect waves-red btn-flat">Отмена</a>
+        </div>
+    {% endverbatim %}
+    </div>
+
 {% endblock %}
 
 {% block panel %}
-    <button onclick='selectAll()'>Выделить все</button>
-    <button onclick='cleanSelectAll()'>Снять выделение</button>
-    <button onclick="window.location.pathname='/create_pattern'">Создать</button>
-    <button onclick='showEditPattern()'>Изменить</button>
-    <button onclick='deletePattern()'>Удалить</button>
+    <a class="waves-effect waves-light btn" onclick='selectAll()'>Выделить все</a>
+    <a class="waves-effect waves-light btn" onclick='cleanSelectAll()'>Снять выделение</a>
+    <a class="waves-effect waves-light btn" onclick="window.location.pathname='/create_pattern'">Создать</a>
+    <a class="waves-effect waves-light btn" href="#modal1">Изменить</a>
+    <a class="waves-effect waves-light btn" onclick='deletePattern()'>Удалить</a>
 {% endblock %}

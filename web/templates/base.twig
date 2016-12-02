@@ -4,7 +4,9 @@
         <script type="text/javascript" src="static/js/jquery-1.11.1.min.js"></script>
         <script type="text/javascript" src="static/js/angular.min.js"></script>
         <script type="text/javascript" src="static/js/datepicker.ru.js"></script>
+        <script type="text/javascript" src="static/materialize/js/materialize.min.js"></script>
         <script type="text/javascript" src="static/js/main.js"></script>
+        <link rel="stylesheet" href="static/materialize/css/materialize.min.css" />
         <link rel="stylesheet" href="static/css/main.css" />
     </head>
     <body ng-app="myApp" ng-controller="UserTraffic">
@@ -14,26 +16,14 @@
             <div class="spinner"></div>
         </div>
 
-        <ul id="selectable-menu">
-            <li>
-                <div class="cancel" onclick="window.location.pathname='/users'">Пользователи</div>
-            </li>
-            <li>
-                <div onclick="window.location.pathname='/add_users'">Добавить пользователей</div>
-            </li>
-            <li>
-                <div onclick="getDenySites()">Список запрещенных сайтов</div>
-            </li>
-            <li>
-                <div onclick="window.location.pathname='/patterns'">Шаблоны</div>
-            </li>
-            <li>
-                <div onclick="showStatistic()">Статистика</div>
-            </li>
-            <li>
-                <div onclick="showPreferences()">Настройки</div>
-            </li>
-        </ul>
+        <div class="collection" id="selectable-menu">
+            <a href="/users" class="collection-item">Пользователи</a>
+            <a href="/add_users" class="collection-item active">Добавить пользователей</a>
+            <a href="/sites_access" class="collection-item">Список запрещенных сайтов</a>
+            <a href="/patterns" class="collection-item">Шаблоны</a>
+            <a href="#!" class="collection-item">Статистика</a>
+            <a href="#!" class="collection-item">Настройки</a>
+        </div>
 
         <div id="main">
             {% block content %}{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <h3>Изменение сайта</h3>
+
+    <table cellspacing='10'>
+        <thead>
+        <tr>
+            <td><a href="#">URL адрес</a></td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="site in selectedSites">
+            {% verbatim %}
+                <td><input ng-model="site.url" value="{{site.url}}"></td>
+            {% endverbatim %}
+        </tr>
+        </tbody>
+    </table>
+    <script>
+        console.log(scopeAccess.selectedSites);
+    </script>
+    {% verbatim %}
+        {{selectedSites}}
+    {% endverbatim %}
+{% endblock %}
+
+{% block panel %}
+    <div>
+        <button onclick="applyChangesToDenySites(scopeAccess.checkedSites)">Применить изменения</button>
+        <button onclick="window.location.pathname='/sites_access'">Отмена</button>
+    </div>
+{% endblock %}

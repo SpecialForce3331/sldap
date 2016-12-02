@@ -307,9 +307,9 @@
 
             foreach ( $changes as $change)
             {
-                $this->applyChangesToDenySites($change[1], $change[0]);
+                $this->applyChangesToDenySites($change["url"], $change["id"]);
             }
-            return json_encode( array( "result" => "ok", "message" => "Успешное обновление запрещенного(ых) сайта(ов)." ));
+            return json_encode( array( "result" => "ok", "message" => "Успешное  обновление запрещенного(ых) сайта(ов)." ));
         }
 
         function getPermissionPatterns()
